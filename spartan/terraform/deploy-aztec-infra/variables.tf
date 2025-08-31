@@ -1,4 +1,4 @@
-variable "GCP_PROJECT" {
+variable "GCP_PROJECT_ID" {
   description = "GCP project id"
   type        = string
   default     = "testnet-440309"
@@ -47,12 +47,6 @@ variable "RPC_RESOURCE_PROFILE" {
     condition     = contains(["dev", "prod"], var.RPC_RESOURCE_PROFILE)
     error_message = "RPC_RESOURCE_PROFILE must be either 'dev' or 'prod'."
   }
-}
-
-variable "RPC_EXTERNAL_INGRESS" {
-  description = "Whether to use an external ingress for the rpc"
-  type        = bool
-  default     = false
 }
 
 variable "K8S_CLUSTER_CONTEXT" {

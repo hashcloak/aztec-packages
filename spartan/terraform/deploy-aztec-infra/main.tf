@@ -16,15 +16,9 @@ terraform {
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.24.0"
+      version = "~> 2.38.0"
     }
   }
-}
-
-# Only used if deploying an RPC with an external ingress
-provider "google" {
-  project = var.GCP_PROJECT
-  region  = var.GCP_REGION
 }
 
 provider "kubernetes" {
@@ -142,9 +136,9 @@ resource "helm_release" "releases" {
   force_update     = true
   recreate_pods    = true
   reuse_values     = true
-  timeout          = 300
-  wait             = false
-  wait_for_jobs    = false
+  timeout          = 600
+  wait             = true
+  wait_for_jobs    = true
 
   values = [for v in each.value.values : file("./values/${v}")]
 
@@ -161,10 +155,6 @@ resource "helm_release" "releases" {
       (var.OTEL_COLLECTOR_ENDPOINT != "" && each.key != "p2p_bootstrap") ? {
         "global.otelCollectorEndpoint" = var.OTEL_COLLECTOR_ENDPOINT
       } : {},
-      # Add RPC ingress annotation if needed
-      (each.key == "rpc" && var.RPC_EXTERNAL_INGRESS && length(google_compute_address.rpc_ingress) > 0) ? {
-        "service.ingress.annotations.networking\\.gke\\.io\\/load-balancer-ip-addresses" = google_compute_address.rpc_ingress[0].name
-      } : {}
     )
     content {
       name  = set.key
@@ -182,10 +172,3 @@ resource "helm_release" "releases" {
   }
 }
 
-# Keep the Google Compute Address as separate resource
-resource "google_compute_address" "rpc_ingress" {
-  count        = var.RPC_EXTERNAL_INGRESS ? 1 : 0
-  provider     = google
-  name         = "${var.NAMESPACE}-${var.RELEASE_PREFIX}-rpc-ingress"
-  address_type = "EXTERNAL"
-}

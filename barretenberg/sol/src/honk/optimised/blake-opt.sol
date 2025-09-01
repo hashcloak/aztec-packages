@@ -946,13 +946,13 @@ contract BlakeOptHonkVerifier is IVerifier {
 
     // Poseidon internal constants
 
-    uint256 internal constant POS_INTENAL_MATRIX_D_0 =
+    uint256 internal constant POS_INTERNAL_MATRIX_D_0 =
         0x10dc6e9c006ea38b04b1e03b4bd9490c0d03f98929ca1d7fb56821fd19d3b6e7;
-    uint256 internal constant POS_INTENAL_MATRIX_D_1 =
+    uint256 internal constant POS_INTERNAL_MATRIX_D_1 =
         0x0c28145b6a44df3e0149b3d0a30b3bb599df9756d4dd9b84a86b38cfb45a740b;
-    uint256 internal constant POS_INTENAL_MATRIX_D_2 =
+    uint256 internal constant POS_INTERNAL_MATRIX_D_2 =
         0x00544b8338791518b2c7645a50392798b21f75bb60e3596170067d00141cac15;
-    uint256 internal constant POS_INTENAL_MATRIX_D_3 =
+    uint256 internal constant POS_INTERNAL_MATRIX_D_3 =
         0x222c01175718386f2e2e82eb122789e352e105a3b8fa852613bc534433ee428b;
 
     // Constants inspecting proof components
@@ -991,7 +991,6 @@ contract BlakeOptHonkVerifier is IVerifier {
     uint256 internal constant MODEXP_FAILED_SELECTOR = 0xf442f1632;
     uint256 internal constant PROOF_POINT_NOT_ON_CURVE_SELECTOR = 0x661e012dec;
 
-
     // TOOD: maybe verify vk points are on curve in constructor
     constructor() {}
 
@@ -1006,42 +1005,42 @@ contract BlakeOptHonkVerifier is IVerifier {
             /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
             // Write the verification key into memory
             function loadVk() {
-                mstore(Q_L_X_LOC, 0x1dbc2d49981f1318140ca1106a52550e1c079613c92a2b23206d1504cfb2f86b)
-                mstore(Q_L_Y_LOC, 0x04d743fe1aa6c0e790573ff504c0b5068b8d630459835db49d24004e0f010ad3)
-                mstore(Q_R_X_LOC, 0x06d4bd3d2520f2a248394d32ae446f689484f908ddcf272e978d431784e205f1)
-                mstore(Q_R_Y_LOC, 0x175cf52a76ee209fd0ff22a663db695c0d290b60d71138236aef5b329ab19432)
-                mstore(Q_O_X_LOC, 0x2381d95872adb9e4f3955b2c49f978ee03b98cdb0abdf39b0968a507501c9dba)
-                mstore(Q_O_Y_LOC, 0x1b008ca9ebed2b85934fb415d074922e1def59790d010bb15729d3824beea8a7)
-                mstore(Q_4_X_LOC, 0x2f2580b9ccf05cf1b0f017e01456a6bfdafcf9b3166c576c687de3c9e3c50304)
-                mstore(Q_4_Y_LOC, 0x0b371c7aab9c618ce48d244ef8356cde119972b5c40caf4a5f38ad817d448451)
-                mstore(Q_M_X_LOC, 0x2be5953099867a3a2150e243842f051637662c71e3d7c19eb666f2dcb7d35ed6)
-                mstore(Q_M_Y_LOC, 0x1400e3f66ff58817c736185766bad7b06df6fc22d6394a458e2ee79f31d14797)
-                mstore(Q_C_X_LOC, 0x1cebfae35f0e17cea692772e1b0f64a860a185a35fe4d91d52b1e08b133ef525)
-                mstore(Q_C_Y_LOC, 0x1398b2c0e75952e2614ec248b7f2002e710035f2ec026a386c1940e12203a173)
+                mstore(Q_L_X_LOC, 0x1638b2ed58e539359cbb8efff0c6772b16bfe763ff7d1accf8b7fcfe8a075d5d)
+                mstore(Q_L_Y_LOC, 0x2ddbcd8955a1df6ee2906cd36e4ef311e1961ec5fda0ca087aaca85c577de5cc)
+                mstore(Q_R_X_LOC, 0x01280c5514168fd87e88e091a5603203d8080dc478fa0b3f2e0deaa890e9fd5d)
+                mstore(Q_R_Y_LOC, 0x1e4a39ad59ad54003413ee00477bab5fe3762051eeba5dc63b3e4f964ff15a52)
+                mstore(Q_O_X_LOC, 0x11f06709030cf47eba1c2aaae00e3e9619aa13a3fbaa87529e0191a667da2c5b)
+                mstore(Q_O_Y_LOC, 0x15cf88cde7933953fcd84ab2eeb3c79d4947900e0b26afa16c9eba652dabfdd1)
+                mstore(Q_4_X_LOC, 0x014b3cbcde455a549e385b619b8aad17ed1d0421bc81c529109556f03bf29940)
+                mstore(Q_4_Y_LOC, 0x10fa330b0a29195e0b347a60d8bcad917473fb095789aa20b167822a4f4225e9)
+                mstore(Q_M_X_LOC, 0x1406d7ba0edad4fa80b4b4f404e92f13e2ebe331836424fa7bd7603f46bfc8f9)
+                mstore(Q_M_Y_LOC, 0x1056d68aa1d535848f4d5ab211a31f7bbc0a8a9a1a44ed11cd14c7050c90f36f)
+                mstore(Q_C_X_LOC, 0x25ba1402c44ac14024b4b15de30224aae9338edfc35ecc6a067da482a611f370)
+                mstore(Q_C_Y_LOC, 0x22150e1f00f02524832dcffce40ad0cfdbcffeda64e09c4e924873e163cc5eb5)
                 mstore(Q_LOOKUP_X_LOC, 0x2f52fd71248e5fb7fcda49e0778edcf84065f4c837dc259c99350f66d2756526)
                 mstore(Q_LOOKUP_Y_LOC, 0x07f7f722d2341b84f37e028a0993f9ba6eb0539524e258a6666f2149f7edba7e)
-                mstore(Q_ARITH_X_LOC, 0x0a2f3de6c4da1c2f6711875e52ee30c1eb7676fe3f04dee0cbe51d8e9314968d)
-                mstore(Q_ARITH_Y_LOC, 0x1163146d3736c646b9f0d3e446b742a925732850136119397601ab9c729406ac)
-                mstore(Q_DELTA_RANGE_X_LOC, 0x0f75fa9241e6b995002a5dec650dd8ee11b2c95463b42b9bfd6886d861a81dcc)
-                mstore(Q_DELTA_RANGE_Y_LOC, 0x000b33ecd7762627f56dd05319f6c2a8f577d84c23736426a14a815ea240dd10)
-                mstore(Q_ELLIPTIC_X_LOC, 0x23d68410cad93a2213d42fc11507040613f1c36376c79fc119af71f9240ddf85)
-                mstore(Q_ELLIPTIC_Y_LOC, 0x08036d4655c57be0f4c5e4165dbb99102feb96cdff2eb5c7f02358c7ce06d1ea)
-                mstore(Q_MEMORY_X_LOC, 0x1133465e96ae5ca432246d0fb87ce71c0f37b36dfdf404a6c97c487242a6bf71)
-                mstore(Q_MEMORY_Y_LOC, 0x1edd6fa7f5b8c58ac5bcfea2db37b96f66e55376162e9230d6b8b88f5ae04c6d)
-                mstore(Q_NNF_X_LOC, 0x2634efbf217db5182ee476472d9a87972acb13713640fbd542b74510b53823d3)
-                mstore(Q_NNF_Y_LOC, 0x1f4efbc506f80a69e5185539cf24ea43e3d7a416989e8d5697fe651f5b525282)
-                mstore(Q_POSEIDON_2_EXTERNAL_X_LOC, 0x1bb2a291b05e1a09d92da67dce13ecfdf4311c3a6c717ed1822331033bb535a0)
-                mstore(Q_POSEIDON_2_EXTERNAL_Y_LOC, 0x2ce5b67d60b91124c3906f07d0ce01476a3fc9cfcca33200d2aafba321b282ca)
-                mstore(Q_POSEIDON_2_INTERNAL_X_LOC, 0x292fc33ecaeee0a93a3db74c63ecb036702ae9d9e10f115b4a41ca026748a8e9)
-                mstore(Q_POSEIDON_2_INTERNAL_Y_LOC, 0x191404cfbc6ecde452a8dc5e2f2971948fff39018c5ccd820c8454679a299e8d)
-                mstore(SIGMA_1_X_LOC, 0x0a185ce3c7f2823ad60e0217165c591d0fc4743a4ffd8df74e735eb842ec37d1)
-                mstore(SIGMA_1_Y_LOC, 0x16003f72a8338960f090006eb8313aa3773a445c2dbc974e03337c0f0a643ffe)
-                mstore(SIGMA_2_X_LOC, 0x274cf54ae7f12682a78a2682118ef13862e8697325d1280d3758ae907238ba0c)
-                mstore(SIGMA_2_Y_LOC, 0x06114456c109ea3e28becc1819131ca5902491ccf9738f27918a92c74d5808f4)
-                mstore(SIGMA_3_X_LOC, 0x1860e83dbaee0d906588cc79b49323f24d983b79a9dc90bf838d8fd8d5075c74)
-                mstore(SIGMA_3_Y_LOC, 0x197f83bc73cde1744420bbfb265c78c4f97beb3f4d89c988b431a2e002dd7aad)
-                mstore(SIGMA_4_X_LOC, 0x3037389763af5b68ca15943e765c1a58b2a5b3ac251a9d942bf6367bf718f9ee)
-                mstore(SIGMA_4_Y_LOC, 0x0ab24e2474238a7130b1da39c972873619dc1f2cdf8719f840daaeb14c04861e)
+                mstore(Q_ARITH_X_LOC, 0x1a843a0cbf7476e7aa05dd1accb04aee33edd30335564760d200d166b81a5a47)
+                mstore(Q_ARITH_Y_LOC, 0x0733bd85b240d534e9e7629097af2b0c10a522d02d1a7f0bb4d824bbf53851bc)
+                mstore(Q_DELTA_RANGE_X_LOC, 0x207b3d205b5cd89af702e8e4873c9c782b6c4b34bfdcf22c06a4f82ac6115d56)
+                mstore(Q_DELTA_RANGE_Y_LOC, 0x16a0ae79403eac677e8a955a15e2f1faf7c3c257ca8875e96c39cf72552df6b1)
+                mstore(Q_ELLIPTIC_X_LOC, 0x28941e51374452e59375dc2bcd35f00912cefd71b75b8c9cd5d95670904ba2c1)
+                mstore(Q_ELLIPTIC_Y_LOC, 0x28ec61c18d257a28d61716de1b0f901d084acde5c3bc107033fbba7d1e04f96a)
+                mstore(Q_MEMORY_X_LOC, 0x19dafffb33c4500bd1dccbcce24081452a6395e26a2de73f3de9dfc5d0db1cab)
+                mstore(Q_MEMORY_Y_LOC, 0x251fb355550281ac47fba405fb9a6104197bd12aa80e2907f5d53546b55321df)
+                mstore(Q_NNF_X_LOC, 0x26301dc973b5a0af5a50868f91a0cb0b7aab744a7899d1314aaa14abfb87e46e)
+                mstore(Q_NNF_Y_LOC, 0x0c70e916551b7b90f0c5bdfc22b07c597e711e8352facb0047bc71aca13c1bdc)
+                mstore(Q_POSEIDON_2_EXTERNAL_X_LOC, 0x0e91b34f920c9f2f19a2ed06fa4a24d2be0f53b2cdf01970791d94f137af647f)
+                mstore(Q_POSEIDON_2_EXTERNAL_Y_LOC, 0x1cc6301df7aef5d146df4a9b89eacbbbf2630e1d68fe92a66eeaa00c0451063e)
+                mstore(Q_POSEIDON_2_INTERNAL_X_LOC, 0x22797c765162fdf33646a9d33db47bbc51aa39ebd4d58e26878505d6baecbf06)
+                mstore(Q_POSEIDON_2_INTERNAL_Y_LOC, 0x088d03f1c8b1ce48e40b7441698b6a3279370c3df0e8faa794b9e2c21c0be0e7)
+                mstore(SIGMA_1_X_LOC, 0x2a7a70eec6247bd60eafdcabff3b3c3670a86e19cf0ca1eab139e600118afd5f)
+                mstore(SIGMA_1_Y_LOC, 0x2f43fac36f4ad55d4b3e90874b80fafa4aef8c792ced507b5cdb34bc67000f57)
+                mstore(SIGMA_2_X_LOC, 0x0f3dd01bb4fb96b54de000bc7df04bfd5c96358046619e25358070054b090be3)
+                mstore(SIGMA_2_Y_LOC, 0x1114febc90f9dd2bbb962ddc912ad2149f6dd3afccc7c55cfb57bb6939dcf312)
+                mstore(SIGMA_3_X_LOC, 0x0f6fe67d35229c76a800fc7d7f7b17d97f1596aabeffe9d32ec739845afdef1d)
+                mstore(SIGMA_3_Y_LOC, 0x2e8d96f51c4e5f46e5220fd9c9f356077d8bdbae08ae5ac13431761949064271)
+                mstore(SIGMA_4_X_LOC, 0x2532d1d2a00f802b2aa16b9a4f65e5762cff11609a503d582657873c5d1b3bd2)
+                mstore(SIGMA_4_Y_LOC, 0x1d795c8bc050f5232ec4632db16e230dea1299f3397794955c18e08615902d28)
                 mstore(TABLE_1_X_LOC, 0x2d063c46ff66cce30b90a92ac814ecdb93e8f4881222ee7ce76651bf3ad54e07)
                 mstore(TABLE_1_Y_LOC, 0x0215718164a2dbf8fc7da2fcf053b162d84e8703001218f0ad90d1f8d7526ba0)
                 mstore(TABLE_2_X_LOC, 0x1bdccd1181f8c909975dd24a69fd1c26ed6e513cd237106bacd9ac5e790374f2)
@@ -1050,18 +1049,18 @@ contract BlakeOptHonkVerifier is IVerifier {
                 mstore(TABLE_3_Y_LOC, 0x04bffddce3617713d52791e3344987b29b7c3359a227a03ca26857e813a84278)
                 mstore(TABLE_4_X_LOC, 0x2a0724cfe33e0ee4b3f81929ef0cd1da5e113987c9aed1534cca51dae3d9bc2d)
                 mstore(TABLE_4_Y_LOC, 0x26983a78aa5c4f3103c7e6128a32f0fae2779a6f0efb2b60facdd09153d403c9)
-                mstore(ID_1_X_LOC, 0x036e9faa607b6e7b97aa939face171293464ea9983674c2a23dc3586cb3646a0)
-                mstore(ID_1_Y_LOC, 0x1c44f59189b7da985accbd2810512c34b938f6892324326f3d8ed0445abf7cb3)
-                mstore(ID_2_X_LOC, 0x25e2e65c5b496b09b0fbb4a4f5f26b0d7525b1c4973efcedc641052b05d1eeca)
-                mstore(ID_2_Y_LOC, 0x2ebbcc2e263835cdf1d29d1381895cadf5a74583998a7e23139e04d6ef110ecb)
-                mstore(ID_3_X_LOC, 0x28bcb49916bccb9286a5fcc44bc513ed9df38d2042335556f7d7788ca87ad268)
-                mstore(ID_3_Y_LOC, 0x004daa3b3de855f9aac2dd1a04392f9c1bc9d9678b96b94705ca30361ff10c2c)
-                mstore(ID_4_X_LOC, 0x13756493eec9a875b3984e91dd380a82db0f76ec4cd9b7f7c7393eca89525d51)
-                mstore(ID_4_Y_LOC, 0x1d1d4b3d152e00a6dc81dfd10caba54e964046c86ee19e39f43f1989bbab1d03)
+                mstore(ID_1_X_LOC, 0x26cca178117c77a332dd03c35b7504d40e164f95b2e1c83e66f1105c717b74a8)
+                mstore(ID_1_Y_LOC, 0x26c36943eaa28edf962275789f836f48aa98dc56c3009cc5b2a7f6b34b400ed2)
+                mstore(ID_2_X_LOC, 0x1ce151bc52077ae1c18d0165e8e905eff9e28b53cfa8d8aa99534b1a4e8cae79)
+                mstore(ID_2_Y_LOC, 0x09f386987e8bc8c24683cf2757fa0570a84f30262a0e9b39f3973678e582169a)
+                mstore(ID_3_X_LOC, 0x11b0dfcd60a77573e16f9f3c22bd0255a4de9777ca848c827cce82606ff04be8)
+                mstore(ID_3_Y_LOC, 0x2cab9289ebddb7919b108fa2c7ff257bebfeded546a64ba87988392355974cef)
+                mstore(ID_4_X_LOC, 0x294c0b4872a3c804d129cbfcba96bf3938dae9c337c4f1df6e0c2fa4ab121a8e)
+                mstore(ID_4_Y_LOC, 0x1827a12a2960053b705cdfb16dbb1ee4e6e2a24bb0a1942d09d8203ceb6ce1a0)
                 mstore(LAGRANGE_FIRST_X_LOC, 0x0000000000000000000000000000000000000000000000000000000000000001)
                 mstore(LAGRANGE_FIRST_Y_LOC, 0x0000000000000000000000000000000000000000000000000000000000000002)
-                mstore(LAGRANGE_LAST_X_LOC, 0x17e0906260294d3d5c54eac5f5d339729e238f870f5e304f258cad591b9f6e8f)
-                mstore(LAGRANGE_LAST_Y_LOC, 0x10dd66d911bcc3d85f85797e451edfd1d98b78130650208c3f8cf586c9e902c4)
+                mstore(LAGRANGE_LAST_X_LOC, 0x16b8bb289fe0de3b28e212ae2e1201c47ba39d55d7dbd5e10d67f57c3433bac5)
+                mstore(LAGRANGE_LAST_Y_LOC, 0x0653455f179c7df626a5b79bf2694c5ceaf36de7f007a4cfa251305b68b50775)
             }
 
             // Prime field order
@@ -1101,8 +1100,6 @@ contract BlakeOptHonkVerifier is IVerifier {
                  * and w1,w2,w3 are all proof points values
                  */
 
-                let number_of_public_inputs := NUMBER_PUBLIC_INPUTS
-
                 mstore(0x00, VK_HASH)
 
                 let public_inputs_start := add(calldataload(0x24), 0x24)
@@ -1112,7 +1109,7 @@ contract BlakeOptHonkVerifier is IVerifier {
                 calldatacopy(0x20, public_inputs_start, public_inputs_size)
 
                 // Copy Pairing points into eta buffer
-                let public_inputs_end := add(0x60, public_inputs_size)
+                let public_inputs_end := add(0x20, public_inputs_size)
 
                 calldatacopy(public_inputs_end, proof_ptr, 0x200)
 
@@ -1120,7 +1117,7 @@ contract BlakeOptHonkVerifier is IVerifier {
                 // End of public inputs + pairing point
                 calldatacopy(add(0x220, public_inputs_size), add(proof_ptr, 0x200), 0x100)
 
-                // 0x1e0 = 3 * 32 bytes + 3 * 64 bytes for (w1,w2,w3) + 0x200 for pairing points
+                // 0x2e0 = 1 * 32 bytes + 3 * 64 bytes for (w1,w2,w3) + 0x200 for pairing points
                 let eta_input_length := add(0x2e0, public_inputs_size)
 
                 let prev_challenge := mod(keccak256(0x00, eta_input_length), p)
@@ -1216,13 +1213,19 @@ contract BlakeOptHonkVerifier is IVerifier {
                 /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
                 /*                       GATE CHALLENGES                      */
                 /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-                let gate_off := GATE_CHALLENGE_0
-                for {} lt(gate_off, SUM_U_CHALLENGE_0) {} {
-                    prev_challenge := mod(keccak256(0x00, 0x20), p)
-                    mstore(0x00, prev_challenge)
-                    let gate_challenge := and(prev_challenge, LOWER_128_MASK)
 
-                    mstore(gate_off, gate_challenge)
+                // Store the first gate challenge
+                prev_challenge := mod(keccak256(0x00, 0x20), p)
+                mstore(0x00, prev_challenge)
+                let gate_challenge := and(prev_challenge, LOWER_128_MASK)
+                mstore(GATE_CHALLENGE_0, gate_challenge)
+
+                let gate_off := GATE_CHALLENGE_1
+                for {} lt(gate_off, SUM_U_CHALLENGE_0) {} {
+                    let prev := mload(sub(gate_off, 0x20))
+
+                    mstore(gate_off, mulmod(prev, prev, p))
+
                     gate_off := add(gate_off, 0x20)
                 }
 
@@ -1384,9 +1387,10 @@ contract BlakeOptHonkVerifier is IVerifier {
 
                 let p_clone := p // move p to the front of the stack
 
-                // Assume both and offset are less than p
+                // Assume offset is less than p
                 // numerator_acc = gamma + (beta * (PERMUTATION_ARGUMENT_VALUE_SEPARATOR + offset))
-                let numerator_acc := addmod(gamma, mulmod(beta, add(PERMUTATION_ARGUMENT_VALUE_SEPARATOR, pub_off), p_clone), p_clone)
+                let numerator_acc :=
+                    addmod(gamma, mulmod(beta, add(PERMUTATION_ARGUMENT_VALUE_SEPARATOR, pub_off), p_clone), p_clone)
                 // demonimator_acc = gamma - (beta * (offset + 1))
                 let beta_x_off := mulmod(beta, add(pub_off, 1), p_clone)
                 let denominator_acc := addmod(gamma, sub(p_clone, beta_x_off), p_clone)
@@ -1442,7 +1446,7 @@ contract BlakeOptHonkVerifier is IVerifier {
                     mstore(0x20, 0x20)
                     mstore(0x40, 0x20)
                     mstore(0x60, denominator_value)
-                    mstore(0x80, sub(p, 2))
+                    mstore(0x80, P_SUB_2)
                     mstore(0xa0, p)
                     if iszero(staticcall(gas(), 0x05, 0x00, 0xc0, 0x00, 0x20)) {
                         mstore(0x00, MODEXP_FAILED_SELECTOR)
@@ -2285,7 +2289,7 @@ contract BlakeOptHonkVerifier is IVerifier {
                             // scaled_activation_selector = q_arith * q_aux * alpha
                             let scaled_activation_selector :=
                                 mulmod(
-                                    mload(QARITH_EVAL_LOC),
+                                    mload(QO_EVAL_LOC),
                                     mulmod(mload(QMEMORY_EVAL_LOC), mload(POW_PARTIAL_EVALUATION_LOC), p),
                                     p
                                 )
@@ -2309,7 +2313,7 @@ contract BlakeOptHonkVerifier is IVerifier {
                                 mulmod(next_gate_access_type_is_boolean, scaled_activation_selector, p)
                             )
 
-                            mstore(AUX_RAM_CONSISTENCY_CHECK_IDENTITY, mulmod(access_check, mload(QARITH_EVAL_LOC), p))
+                            mstore(AUX_RAM_CONSISTENCY_CHECK_IDENTITY, mulmod(access_check, mload(QO_EVAL_LOC), p))
                         }
 
                         {
@@ -2593,28 +2597,26 @@ contract BlakeOptHonkVerifier is IVerifier {
                     let q_pos_by_scaling :=
                         mulmod(mload(QPOSEIDON2_INTERNAL_EVAL_LOC), mload(POW_PARTIAL_EVALUATION_LOC), p)
 
-                    let v1 := addmod(mulmod(u1, POS_INTENAL_MATRIX_D_0, p), u_sum, p)
+                    let v1 := addmod(mulmod(u1, POS_INTERNAL_MATRIX_D_0, p), u_sum, p)
 
                     mstore(
                         SUBRELATION_EVAL_24_LOC,
                         mulmod(q_pos_by_scaling, addmod(v1, sub(p, mload(W1_SHIFT_EVAL_LOC)), p), p)
                     )
-
-                    let v2 := addmod(mulmod(u2, POS_INTENAL_MATRIX_D_1, p), u_sum, p)
+                    let v2 := addmod(mulmod(u2, POS_INTERNAL_MATRIX_D_1, p), u_sum, p)
 
                     mstore(
                         SUBRELATION_EVAL_25_LOC,
                         mulmod(q_pos_by_scaling, addmod(v2, sub(p, mload(W2_SHIFT_EVAL_LOC)), p), p)
                     )
-
-                    let v3 := addmod(mulmod(u3, POS_INTENAL_MATRIX_D_2, p), u_sum, p)
+                    let v3 := addmod(mulmod(u3, POS_INTERNAL_MATRIX_D_2, p), u_sum, p)
 
                     mstore(
                         SUBRELATION_EVAL_26_LOC,
                         mulmod(q_pos_by_scaling, addmod(v3, sub(p, mload(W3_SHIFT_EVAL_LOC)), p), p)
                     )
 
-                    let v4 := addmod(mulmod(u4, POS_INTENAL_MATRIX_D_3, p), u_sum, p)
+                    let v4 := addmod(mulmod(u4, POS_INTERNAL_MATRIX_D_3, p), u_sum, p)
                     mstore(
                         SUBRELATION_EVAL_27_LOC,
                         mulmod(q_pos_by_scaling, addmod(v4, sub(p, mload(W4_SHIFT_EVAL_LOC)), p), p)
@@ -2733,7 +2735,6 @@ contract BlakeOptHonkVerifier is IVerifier {
             mstore(NEG_INVERTED_DENOM_0_LOC, addmod(eval_challenge, mload(POWERS_OF_EVALUATION_CHALLENGE_0_LOC), p))
 
             // Compute Fold Pos Evaluatios
-            // TODO: unroll - can do in code gen - probably using handlebars???
 
             // In order to compute fold pos evaluations we need
             let store_off := INVERTED_CHALLENEGE_POW_MINUS_U_14_LOC
@@ -2775,7 +2776,6 @@ contract BlakeOptHonkVerifier is IVerifier {
                 }
             }
 
-            // NOTE:
             // To be inverted
             // From: computeFoldPosEvaluations
             // Series of challengePower * (ONE - u)

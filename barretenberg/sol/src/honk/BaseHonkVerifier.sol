@@ -427,10 +427,8 @@ abstract contract BaseHonkVerifier is IVerifier {
             mem.constantTermAccumulator = mem.constantTermAccumulator + accumContribution;
             // Update the running power of v
             mem.batchingChallenge = mem.batchingChallenge * tp.shplonkNu * tp.shplonkNu;
-        }
 
-        for (uint256 i = 0; i < CONST_PROOF_SIZE_LOG_N - 1; ++i) {
-            commitments[NUMBER_UNSHIFTED + 1 + i] = convertProofPoint(proof.geminiFoldComms[i]);
+            commitments[NUMBER_UNSHIFTED + 1 + i] = proof.geminiFoldComms[i];
         }
 
         // Finalize the batch opening claim

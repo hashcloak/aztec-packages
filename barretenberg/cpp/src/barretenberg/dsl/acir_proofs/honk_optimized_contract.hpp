@@ -410,6 +410,7 @@ uint256 constant NUMBER_UNSHIFTED = 36;
 uint256 constant NUMBER_TO_BE_SHIFTED = 5;
 uint256 constant PAIRING_POINTS_SIZE = 16;
 
+uint256 constant VK_HASH = {{ VK_HASH }};
 uint256 constant CIRCUIT_SIZE = {{ CIRCUIT_SIZE }};
 uint256 constant LOG_N = {{ LOG_CIRCUIT_SIZE }};
 uint256 constant NUMBER_PUBLIC_INPUTS = {{ NUM_PUBLIC_INPUTS }};
@@ -466,13 +467,13 @@ contract HonkVerifier is IVerifier {
 
     // Poseidon internal constants
 
-    uint256 internal constant POS_INTENAL_MATRIX_D_0 =
+    uint256 internal constant POS_INTERNAL_MATRIX_D_0 =
         0x10dc6e9c006ea38b04b1e03b4bd9490c0d03f98929ca1d7fb56821fd19d3b6e7;
-    uint256 internal constant POS_INTENAL_MATRIX_D_1 =
+    uint256 internal constant POS_INTERNAL_MATRIX_D_1 =
         0x0c28145b6a44df3e0149b3d0a30b3bb599df9756d4dd9b84a86b38cfb45a740b;
-    uint256 internal constant POS_INTENAL_MATRIX_D_2 =
+    uint256 internal constant POS_INTERNAL_MATRIX_D_2 =
         0x00544b8338791518b2c7645a50392798b21f75bb60e3596170067d00141cac15;
-    uint256 internal constant POS_INTENAL_MATRIX_D_3 =
+    uint256 internal constant POS_INTERNAL_MATRIX_D_3 =
         0x222c01175718386f2e2e82eb122789e352e105a3b8fa852613bc534433ee428b;
 
     // Constants inspecting proof components
@@ -497,6 +498,9 @@ contract HonkVerifier is IVerifier {
     uint256 internal constant P_SUB_5 = 21888242871839275222246405745257275088548364400416034343698204186575808495612;
     uint256 internal constant P_SUB_6 = 21888242871839275222246405745257275088548364400416034343698204186575808495611;
     uint256 internal constant P_SUB_7 = 21888242871839275222246405745257275088548364400416034343698204186575808495610;
+
+    // Constants for computing public input delta
+    uint256 constant PERMUTATION_ARGUMENT_VALUE_SEPARATOR = 1 << 28;
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                         ERRORS                             */
@@ -617,34 +621,29 @@ contract HonkVerifier is IVerifier {
                  * and w1,w2,w3 are all proof points values
                  */
 
-                let number_of_public_inputs := NUMBER_PUBLIC_INPUTS
-
-                mstore(0x00, CIRCUIT_SIZE)
-                mstore(0x20, NUMBER_PUBLIC_INPUTS)
-                mstore(0x40, PUBLIC_INPUTS_OFFSET)
+                mstore(0x00, VK_HASH)
 
                 let public_inputs_start := add(calldataload(0x24), 0x24)
                 let public_inputs_size := mul(REAL_NUMBER_PUBLIC_INPUTS, 0x20)
 
                 // Copy the public inputs into the eta buffer
-                calldatacopy(0x60, public_inputs_start, public_inputs_size)
+                calldatacopy(0x20, public_inputs_start, public_inputs_size)
 
                 // Copy Pairing points into eta buffer
-                let public_inputs_end := add(0x60, public_inputs_size)
+                let public_inputs_end := add(0x20, public_inputs_size)
 
                 calldatacopy(public_inputs_end, proof_ptr, 0x200)
 
                 // 0x20 * 8 = 0x100
                 // End of public inputs + pairing point
-                calldatacopy(add(0x260, public_inputs_size), add(proof_ptr, 0x200), 0x100)
+                calldatacopy(add(0x220, public_inputs_size), add(proof_ptr, 0x200), 0x100)
 
-                // 0x1e0 = 3 * 32 bytes + 3 * 64 bytes for (w1,w2,w3) + 0x200 for pairing points
-                let eta_input_length := add(0x320, public_inputs_size)
+                // 0x2e0 = 1 * 32 bytes + 3 * 64 bytes for (w1,w2,w3) + 0x200 for pairing points
+                let eta_input_length := add(0x2e0, public_inputs_size)
 
                 let prev_challenge := mod(keccak256(0x00, eta_input_length), p)
                 mstore(0x00, prev_challenge)
 
-                // TODO: remember how to function jump - todo unroll function jumps???
                 let eta := and(prev_challenge, LOWER_128_MASK)
                 let etaTwo := shr(128, prev_challenge)
 
@@ -735,13 +734,19 @@ contract HonkVerifier is IVerifier {
                 /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
                 /*                       GATE CHALLENGES                      */
                 /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-                let gate_off := GATE_CHALLENGE_0
-                for {} lt(gate_off, SUM_U_CHALLENGE_0) {} {
-                    prev_challenge := mod(keccak256(0x00, 0x20), p)
-                    mstore(0x00, prev_challenge)
-                    let gate_challenge := and(prev_challenge, LOWER_128_MASK)
 
-                    mstore(gate_off, gate_challenge)
+                // Store the first gate challenge
+                prev_challenge := mod(keccak256(0x00, 0x20), p)
+                mstore(0x00, prev_challenge)
+                let gate_challenge := and(prev_challenge, LOWER_128_MASK)
+                mstore(GATE_CHALLENGE_0, gate_challenge)
+
+                let gate_off := GATE_CHALLENGE_1
+                for {} lt(gate_off, SUM_U_CHALLENGE_0) {} {
+                    let prev := mload(sub(gate_off, 0x20))
+
+                    mstore(gate_off, mulmod(prev, prev, p))
+
                     gate_off := add(gate_off, 0x20)
                 }
 
@@ -896,7 +901,6 @@ contract HonkVerifier is IVerifier {
             {
                 let beta := mload(BETA_CHALLENGE)
                 let gamma := mload(GAMMA_CHALLENGE)
-                let domain_size := CIRCUIT_SIZE
                 let pub_off := PUBLIC_INPUTS_OFFSET
 
                 let numerator_value := 1
@@ -904,9 +908,10 @@ contract HonkVerifier is IVerifier {
 
                 let p_clone := p // move p to the front of the stack
 
-                // Assume both domainSize and offset are less than p
-                // numerator_acc = gamma + (beta * (domainSize + offset))
-                let numerator_acc := addmod(gamma, mulmod(beta, add(domain_size, pub_off), p_clone), p_clone)
+                // Assume offset is less than p
+                // numerator_acc = gamma + (beta * (PERMUTATION_ARGUMENT_VALUE_SEPARATOR + offset))
+                let numerator_acc :=
+                    addmod(gamma, mulmod(beta, add(PERMUTATION_ARGUMENT_VALUE_SEPARATOR, pub_off), p_clone), p_clone)
                 // demonimator_acc = gamma - (beta * (offset + 1))
                 let beta_x_off := mulmod(beta, add(pub_off, 1), p_clone)
                 let denominator_acc := addmod(gamma, sub(p_clone, beta_x_off), p_clone)
@@ -962,7 +967,7 @@ contract HonkVerifier is IVerifier {
                     mstore(0x20, 0x20)
                     mstore(0x40, 0x20)
                     mstore(0x60, denominator_value)
-                    mstore(0x80, sub(p, 2))
+                    mstore(0x80, P_SUB_2)
                     mstore(0xa0, p)
                     if iszero(staticcall(gas(), 0x05, 0x00, 0xc0, 0x00, 0x20)) {
                         mstore(0x00, MODEXP_FAILED_SELECTOR)
@@ -1805,7 +1810,7 @@ contract HonkVerifier is IVerifier {
                             // scaled_activation_selector = q_arith * q_aux * alpha
                             let scaled_activation_selector :=
                                 mulmod(
-                                    mload(QARITH_EVAL_LOC),
+                                    mload(QO_EVAL_LOC),
                                     mulmod(mload(QMEMORY_EVAL_LOC), mload(POW_PARTIAL_EVALUATION_LOC), p),
                                     p
                                 )
@@ -1829,7 +1834,7 @@ contract HonkVerifier is IVerifier {
                                 mulmod(next_gate_access_type_is_boolean, scaled_activation_selector, p)
                             )
 
-                            mstore(AUX_RAM_CONSISTENCY_CHECK_IDENTITY, mulmod(access_check, mload(QARITH_EVAL_LOC), p))
+                            mstore(AUX_RAM_CONSISTENCY_CHECK_IDENTITY, mulmod(access_check, mload(QO_EVAL_LOC), p))
                         }
 
                         {
@@ -2113,28 +2118,26 @@ contract HonkVerifier is IVerifier {
                     let q_pos_by_scaling :=
                         mulmod(mload(QPOSEIDON2_INTERNAL_EVAL_LOC), mload(POW_PARTIAL_EVALUATION_LOC), p)
 
-                    let v1 := addmod(mulmod(u1, POS_INTENAL_MATRIX_D_0, p), u_sum, p)
+                    let v1 := addmod(mulmod(u1, POS_INTERNAL_MATRIX_D_0, p), u_sum, p)
 
                     mstore(
                         SUBRELATION_EVAL_24_LOC,
                         mulmod(q_pos_by_scaling, addmod(v1, sub(p, mload(W1_SHIFT_EVAL_LOC)), p), p)
                     )
-
-                    let v2 := addmod(mulmod(u2, POS_INTENAL_MATRIX_D_1, p), u_sum, p)
+                    let v2 := addmod(mulmod(u2, POS_INTERNAL_MATRIX_D_1, p), u_sum, p)
 
                     mstore(
                         SUBRELATION_EVAL_25_LOC,
                         mulmod(q_pos_by_scaling, addmod(v2, sub(p, mload(W2_SHIFT_EVAL_LOC)), p), p)
                     )
-
-                    let v3 := addmod(mulmod(u3, POS_INTENAL_MATRIX_D_2, p), u_sum, p)
+                    let v3 := addmod(mulmod(u3, POS_INTERNAL_MATRIX_D_2, p), u_sum, p)
 
                     mstore(
                         SUBRELATION_EVAL_26_LOC,
                         mulmod(q_pos_by_scaling, addmod(v3, sub(p, mload(W3_SHIFT_EVAL_LOC)), p), p)
                     )
 
-                    let v4 := addmod(mulmod(u4, POS_INTENAL_MATRIX_D_3, p), u_sum, p)
+                    let v4 := addmod(mulmod(u4, POS_INTERNAL_MATRIX_D_3, p), u_sum, p)
                     mstore(
                         SUBRELATION_EVAL_27_LOC,
                         mulmod(q_pos_by_scaling, addmod(v4, sub(p, mload(W4_SHIFT_EVAL_LOC)), p), p)
@@ -2253,7 +2256,6 @@ contract HonkVerifier is IVerifier {
             mstore(NEG_INVERTED_DENOM_0_LOC, addmod(eval_challenge, mload(POWERS_OF_EVALUATION_CHALLENGE_0_LOC), p))
 
             // Compute Fold Pos Evaluatios
-            // TODO: unroll - can do in code gen - probably using handlebars???
 
             // In order to compute fold pos evaluations we need
             let store_off := INVERTED_CHALLENEGE_POW_MINUS_U_{{ LOG_N_MINUS_ONE }}_LOC
@@ -2295,7 +2297,6 @@ contract HonkVerifier is IVerifier {
                 }
             }
 
-            // NOTE:
             // To be inverted
             // From: computeFoldPosEvaluations
             // Series of challengePower * (ONE - u)

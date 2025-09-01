@@ -61,11 +61,12 @@ trap "rm -f $TEMP_CPP $TEMP_SOL $TEMP_PROCESSED $FINAL_SOL" EXIT
 cp "$SOL_SRC_FILE" "$TEMP_SOL"
 
 # Replace the hardcoded constants with template placeholders
-sed -i 's/uint256 constant CIRCUIT_SIZE = 32768;/uint256 constant CIRCUIT_SIZE = {{ CIRCUIT_SIZE }};/' "$TEMP_SOL"
-sed -i 's/uint256 constant LOG_N = 15;/uint256 constant LOG_N = {{ LOG_CIRCUIT_SIZE }};/' "$TEMP_SOL"
-sed -i 's/uint256 constant NUMBER_PUBLIC_INPUTS = 20;/uint256 constant NUMBER_PUBLIC_INPUTS = {{ NUM_PUBLIC_INPUTS }};/' "$TEMP_SOL"
-sed -i 's/uint256 constant REAL_NUMBER_PUBLIC_INPUTS = 20 - 16;/uint256 constant REAL_NUMBER_PUBLIC_INPUTS = {{ NUM_PUBLIC_INPUTS }} - 16;/' "$TEMP_SOL"
-sed -i 's/uint256 constant NUMBER_OF_BARYCENTRIC_INVERSES = 120;/uint256 constant NUMBER_OF_BARYCENTRIC_INVERSES = {{ NUMBER_OF_BARYCENTRIC_INVERSES }};/' "$TEMP_SOL"
+sed -i -E 's/(uint256 constant VK_HASH = )0x[0-9a-fA-F]+;/\1{{ VK_HASH }};/' "$TEMP_SOL"
+sed -i -E 's/(uint256 constant CIRCUIT_SIZE = )[0-9]+;/\1{{ CIRCUIT_SIZE }};/' "$TEMP_SOL"
+sed -i -E 's/(uint256 constant LOG_N = )[0-9]+;/\1{{ LOG_CIRCUIT_SIZE }};/' "$TEMP_SOL"
+sed -i -E 's/(uint256 constant NUMBER_PUBLIC_INPUTS = )[0-9]+;/\1{{ NUM_PUBLIC_INPUTS }};/' "$TEMP_SOL"
+sed -i -E 's/(uint256 constant REAL_NUMBER_PUBLIC_INPUTS = )[0-9]+ - 16;/\1{{ NUM_PUBLIC_INPUTS }} - 16;/' "$TEMP_SOL"
+sed -i -E 's/(uint256 constant NUMBER_OF_BARYCENTRIC_INVERSES = )[0-9]+;/\1{{ NUMBER_OF_BARYCENTRIC_INVERSES }};/' "$TEMP_SOL"
 
 # Replace the contract name
 sed -i 's/contract BlakeOptHonkVerifier/contract HonkVerifier/' "$TEMP_SOL"
@@ -77,7 +78,6 @@ awk '
         print
         next
     }
-
     # For all other lines, replace the _14 values with templates
     {
         gsub(/POWERS_OF_EVALUATION_CHALLENGE_14_LOC/, "POWERS_OF_EVALUATION_CHALLENGE_{{ LOG_N_MINUS_ONE }}_LOC")
@@ -85,6 +85,10 @@ awk '
         gsub(/GEMINI_A_EVAL_14/, "GEMINI_A_EVAL_{{ LOG_N_MINUS_ONE }}")
         gsub(/INVERTED_CHALLENEGE_POW_MINUS_U_14_LOC/, "INVERTED_CHALLENEGE_POW_MINUS_U_{{ LOG_N_MINUS_ONE }}_LOC")
         gsub(/FOLD_POS_EVALUATIONS_14_LOC/, "FOLD_POS_EVALUATIONS_{{ LOG_N_MINUS_ONE }}_LOC")
+        gsub(/mcopy\(0x20, GEMINI_FOLD_UNIVARIATE_0_X_LOC, 0x380\)/, "mcopy(0x20, GEMINI_FOLD_UNIVARIATE_0_X_LOC, {{ GEMINI_FOLD_UNIVARIATE_LENGTH }})")
+        gsub(/prev_challenge := mod\(keccak256\(0x00, 0x3a0\), p\)/, "prev_challenge := mod(keccak256(0x00, {{ GEMINI_FOLD_UNIVARIATE_HASH_LENGTH }}), p)")
+        gsub(/mcopy\(0x20, GEMINI_A_EVAL_0, 0x1e0\)/, "mcopy(0x20, GEMINI_A_EVAL_0, {{ GEMINI_EVALS_LENGTH }})")
+        gsub(/prev_challenge := mod\(keccak256\(0x00, 0x200\), p\)/, "prev_challenge := mod(keccak256(0x00, {{ GEMINI_EVALS_HASH_LENGTH }}), p)")
         print
     }
 ' "$TEMP_SOL" > "${TEMP_SOL}.tmp" && mv "${TEMP_SOL}.tmp" "$TEMP_SOL"
@@ -95,7 +99,6 @@ awk '
         in_unroll = 0
         unroll_label = ""
     }
-
     # Detect UNROLL_SECTION_START
     /\{\{[[:space:]]*UNROLL_SECTION_START[[:space:]]+[^}]+\}\}/ {
         print  # Print the start marker
@@ -105,7 +108,6 @@ awk '
         unroll_label = arr[1]
         next
     }
-
     # Detect UNROLL_SECTION_END
     /\{\{[[:space:]]*UNROLL_SECTION_END[[:space:]]+[^}]+\}\}/ {
         print  # Print the end marker
@@ -113,10 +115,77 @@ awk '
         unroll_label = ""
         next
     }
-
     # Skip lines inside unroll sections
     in_unroll { next }
+    # Print all other lines
+    { print }
+' "$TEMP_SOL" > "${TEMP_SOL}.tmp" && mv "${TEMP_SOL}.tmp" "$TEMP_SOL"
 
+# Process the file to remove code inside ACCUMULATE_GEMINI_FOLD_UNIVARIATE section while preserving the markers
+awk '
+    BEGIN {
+        in_accumulate_gemini = 0
+    }
+    # Detect UNROLL_SECTION_START ACCUMULATE_GEMINI_FOLD_UNIVARIATE
+    /\/\/\/ \{\{ UNROLL_SECTION_START ACCUMULATE_GEMINI_FOLD_UNIVARIATE \}\}/ {
+        print  # Print the start marker
+        in_accumulate_gemini = 1
+        next
+    }
+    # Detect UNROLL_SECTION_END ACCUMULATE_GEMINI_FOLD_UNIVARIATE
+    /\/\/\/ \{\{ UNROLL_SECTION_END ACCUMULATE_GEMINI_FOLD_UNIVARIATE \}\}/ {
+        print  # Print the end marker
+        in_accumulate_gemini = 0
+        next
+    }
+    # Skip lines inside accumulate gemini section
+    in_accumulate_gemini { next }
+    # Print all other lines
+    { print }
+' "$TEMP_SOL" > "${TEMP_SOL}.tmp" && mv "${TEMP_SOL}.tmp" "$TEMP_SOL"
+
+# Process the file to remove code inside GEMINI_FOLD_UNIVARIATE_ON_CURVE section while preserving the markers
+awk '
+    BEGIN {
+        in_gemini_fold = 0
+    }
+    # Detect UNROLL_SECTION_START GEMINI_FOLD_UNIVARIATE_ON_CURVE
+    /\/\/\/ \{\{ UNROLL_SECTION_START GEMINI_FOLD_UNIVARIATE_ON_CURVE \}\}/ {
+        print  # Print the start marker
+        in_gemini_fold = 1
+        next
+    }
+    # Detect UNROLL_SECTION_END GEMINI_FOLD_UNIVARIATE_ON_CURVE
+    /\/\/\/ \{\{ UNROLL_SECTION_END GEMINI_FOLD_UNIVARIATE_ON_CURVE \}\}/ {
+        print  # Print the end marker
+        in_gemini_fold = 0
+        next
+    }
+    # Skip lines inside gemini fold section
+    in_gemini_fold { next }
+    # Print all other lines
+    { print }
+' "$TEMP_SOL" > "${TEMP_SOL}.tmp" && mv "${TEMP_SOL}.tmp" "$TEMP_SOL"
+
+# Process the file to remove code inside MEMORY_LAYOUT section while preserving the markers
+awk '
+    BEGIN {
+        in_memory_layout = 0
+    }
+    # Detect SECTION_START MEMORY_LAYOUT
+    /\{\{[[:space:]]*SECTION_START[[:space:]]+MEMORY_LAYOUT[[:space:]]*\}\}/ {
+        print  # Print the start marker
+        in_memory_layout = 1
+        next
+    }
+    # Detect SECTION_END MEMORY_LAYOUT
+    /\{\{[[:space:]]*SECTION_END[[:space:]]+MEMORY_LAYOUT[[:space:]]*\}\}/ {
+        print  # Print the end marker
+        in_memory_layout = 0
+        next
+    }
+    # Skip lines inside memory layout section
+    in_memory_layout { next }
     # Print all other lines
     { print }
 ' "$TEMP_SOL" > "${TEMP_SOL}.tmp" && mv "${TEMP_SOL}.tmp" "$TEMP_SOL"
@@ -124,14 +193,12 @@ awk '
 # Process the file to replace hardcoded values in loadVk with templates
 awk '
 BEGIN { in_loadVk = 0 }
-
 # Detect start of loadVk function
 /function loadVk\(\)/ {
     in_loadVk = 1
     print
     next
 }
-
 # Inside loadVk function
 in_loadVk {
     # Replace hardcoded hex values with template placeholders
@@ -191,13 +258,11 @@ in_loadVk {
     if (/mstore\(LAGRANGE_FIRST_Y_LOC,/) { print "                mstore(LAGRANGE_FIRST_Y_LOC, {{ LAGRANGE_FIRST_Y_LOC }})"; next }
     if (/mstore\(LAGRANGE_LAST_X_LOC,/) { print "                mstore(LAGRANGE_LAST_X_LOC, {{ LAGRANGE_LAST_X_LOC }})"; next }
     if (/mstore\(LAGRANGE_LAST_Y_LOC,/) { print "                mstore(LAGRANGE_LAST_Y_LOC, {{ LAGRANGE_LAST_Y_LOC }})"; next }
-
     # Detect end of loadVk function
     if (/^[[:space:]]*}[[:space:]]*$/) {
         in_loadVk = 0
     }
 }
-
 # Print all other lines as-is
 { print }
 ' "$TEMP_SOL" > "$TEMP_PROCESSED"

@@ -208,7 +208,10 @@ impl LogEncryption for AES128 {
         //      = |full_pt| + 16 - (|full_pt| - 16 * (|full_pt| // 16))
         //      = 16 + 16 * (|full_pt| // 16)
         //      = 16 * (1 + |full_pt| // 16)
-        assert(ciphertext_bytes.len() == 16 * (1 + (PlaintextLen * 32) / 16));
+        std::static_assert(
+            ciphertext_bytes.len() == 16 * (1 + (PlaintextLen * 32) / 16),
+            "unexpected ciphertext length",
+        );
 
         // *****************************************************************************
         // Compute the header ciphertext
@@ -225,7 +228,10 @@ impl LogEncryption for AES128 {
         // bytes larger than the input in this case.
         let header_ciphertext_bytes = aes128_encrypt(header_plaintext, header_iv, header_sym_key);
         // I recall that converting a slice to an array incurs constraints, so I'll check the length this way instead:
-        assert(header_ciphertext_bytes.len() == HEADER_CIPHERTEXT_SIZE_IN_BYTES);
+        std::static_assert(
+            header_ciphertext_bytes.len() == HEADER_CIPHERTEXT_SIZE_IN_BYTES,
+            "unexpected ciphertext header length",
+        );
 
         // *****************************************************************************
         // Prepend / append more bytes of data to the ciphertext, before converting back
@@ -240,7 +246,7 @@ impl LogEncryption for AES128 {
 
         let mut log_bytes = get_arr_of_size__log_bytes__from_PT::<PlaintextLen * 32>();
 
-        assert(
+        std::static_assert(
             log_bytes.len() % 31 == 0,
             "Unexpected error: log_bytes.len() should be divisible by 31, by construction.",
         );
@@ -261,9 +267,9 @@ impl LogEncryption for AES128 {
             log_bytes[offset + i] = log_bytes_padding_to_mult_31[i];
         }
 
-        assert(
+        std::static_assert(
             offset + log_bytes_padding_to_mult_31.len() == log_bytes.len(),
-            "Something has gone wrong",
+            "unexpected encrypted log length",
         );
 
         // *****************************************************************************

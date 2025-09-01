@@ -278,6 +278,13 @@ int parse_and_run_cli_command(int argc, char* argv[])
             "--slow_low_memory", flags.slow_low_memory, "Enable low memory mode (can be 2x slower or more).");
     };
 
+    const auto add_storage_budget_option = [&](CLI::App* subcommand) {
+        return subcommand->add_option("--storage_budget_gb",
+                                      flags.storage_budget_gb,
+                                      "Storage budget in GB for FileBackedMemory. When exceeded, falls back to RAM "
+                                      "(requires --slow_low_memory).");
+    };
+
     const auto add_update_inputs_flag = [&](CLI::App* subcommand) {
         return subcommand->add_flag("--update_inputs", flags.update_inputs, "Update inputs if vk check fails.");
     };
@@ -351,6 +358,7 @@ int parse_and_run_cli_command(int argc, char* argv[])
     add_ipa_accumulation_flag(prove);
     remove_zk_option(prove);
     add_slow_low_memory_flag(prove);
+    add_storage_budget_option(prove);
     add_print_op_counts_flag(prove);
     add_op_counts_out_option(prove);
 
@@ -558,6 +566,9 @@ int parse_and_run_cli_command(int argc, char* argv[])
     debug_logging = flags.debug;
     verbose_logging = debug_logging || flags.verbose;
     slow_low_memory = flags.slow_low_memory;
+    if (flags.storage_budget_gb > 0) {
+        storage_budget = flags.storage_budget_gb * 1024ULL * 1024ULL * 1024ULL;
+    }
 #ifndef __wasm__
     if (print_op_counts || !op_counts_out.empty()) {
         bb::detail::use_op_count_time = true;

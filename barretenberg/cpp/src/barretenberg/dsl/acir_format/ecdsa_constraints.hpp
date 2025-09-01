@@ -52,7 +52,7 @@ struct EcdsaConstraint {
     uint32_t result;
 
     // For serialization, update with any new fields
-    MSGPACK_FIELDS(hashed_message, signature, pub_x_indices, pub_y_indices, result);
+    MSGPACK_FIELDS(hashed_message, signature, pub_x_indices, pub_y_indices, predicate, result);
     friend bool operator==(EcdsaConstraint const& lhs, EcdsaConstraint const& rhs) = default;
 };
 

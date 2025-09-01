@@ -1224,6 +1224,8 @@ export class TXE extends TXETypedOracle {
     txEffect.noteHashes = processedTx!.txEffect.noteHashes;
     txEffect.nullifiers = processedTx!.txEffect.nullifiers;
     txEffect.privateLogs = processedTx!.txEffect.privateLogs;
+    txEffect.publicLogs = processedTx!.txEffect.publicLogs;
+    txEffect.publicDataWrites = processedTx!.txEffect.publicDataWrites;
 
     txEffect.txHash = new TxHash(new Fr(this.blockNumber));
 

@@ -25,6 +25,9 @@ class ClientIVCAPI : public API {
     void write_solidity_verifier(const Flags& flags,
                                  const std::filesystem::path& output_path,
                                  const std::filesystem::path& vk_path) override;
+    void write_sway_verifier(const Flags& flags,
+                                 const std::filesystem::path& output_path,
+                                 const std::filesystem::path& vk_path) override;
 
     // write a vk for verifying a folding stack based on the number of public inputs of the final circuit
     void write_ivc_vk(const std::filesystem::path& input_path, const std::filesystem::path& output_path);

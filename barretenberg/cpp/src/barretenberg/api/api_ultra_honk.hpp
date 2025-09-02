@@ -37,6 +37,10 @@ class UltraHonkAPI : public API {
     void write_solidity_verifier(const Flags& flags,
                                  const std::filesystem::path& output_path,
                                  const std::filesystem::path& vk_path) override;
+
+    void write_sway_verifier([[maybe_unused]] const Flags& flags,
+                                 const std::filesystem::path& output_path,
+                                 const std::filesystem::path& vk_path) override;
 };
 
 template <typename Flavor>

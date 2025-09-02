@@ -401,6 +401,20 @@ int parse_and_run_cli_command(int argc, char* argv[])
     add_crs_path_option(write_solidity_verifier);
 
     /***************************************************************************************************************
+    * Subcommand: write_sway_verifier
+    ***************************************************************************************************************/
+    CLI::App* write_sway_verifier =
+        app.add_subcommand("write_sway_verifier",
+                          "Write a Sway contract suitable for verifying proofs of circuit satisfiability for "
+                          "the circuit with verification key at vk_path.");
+
+    add_scheme_option(write_sway_verifier);
+    add_vk_path_option(write_sway_verifier);
+    add_output_path_option(write_sway_verifier, output_path);
+
+    add_verbose_flag(write_sway_verifier);
+    add_crs_path_option(write_sway_verifier);
+    /***************************************************************************************************************
      * Subcommand: OLD_API
      ***************************************************************************************************************/
     CLI::App* OLD_API = app.add_subcommand("OLD_API", "Access some old API commands");
@@ -633,6 +647,11 @@ int parse_and_run_cli_command(int argc, char* argv[])
             api.write_solidity_verifier(flags, output_path, vk_path);
             return 0;
         }
+        if (write_sway_verifier->parsed()) {
+            api.write_sway_verifier(flags, output_path, vk_path);
+            return 0;
+        }
+
         auto subcommands = app.get_subcommands();
         const std::string message = std::string("No handler for subcommand ") + subcommands[0]->get_name();
         throw_or_abort(message);

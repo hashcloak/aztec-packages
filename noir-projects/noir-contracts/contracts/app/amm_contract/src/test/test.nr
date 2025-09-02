@@ -249,8 +249,8 @@ unconstrained fn swap_tokens_for_exact_tokens() {
 
 #[test(should_fail_with = "INCORRECT_TOKEN0_LIMITS")]
 unconstrained fn add_liquidity_incorrect_token0_limits() {
-    let (mut env, amm_address, _token0_address, _token1_address, _liquidity_token_address, _minter) =
-        setup();
+    let (mut env, amm_address, _token0_address, _token1_address, _liquidity_token_address, _minter)
+         = setup();
 
     let liquidity_provider = env.create_contract_account();
     let amm = AMM::at(amm_address);
@@ -269,8 +269,8 @@ unconstrained fn add_liquidity_incorrect_token0_limits() {
 
 #[test(should_fail_with = "INCORRECT_TOKEN1_LIMITS")]
 unconstrained fn add_liquidity_incorrect_token1_limits() {
-    let (mut env, amm_address, _token0_address, _token1_address, _liquidity_token_address, _minter) =
-        setup();
+    let (mut env, amm_address, _token0_address, _token1_address, _liquidity_token_address, _minter)
+         = setup();
 
     let liquidity_provider = env.create_contract_account();
     let amm = AMM::at(amm_address);
@@ -289,8 +289,8 @@ unconstrained fn add_liquidity_incorrect_token1_limits() {
 
 #[test(should_fail_with = "INSUFFICIENT_INPUT_AMOUNTS")]
 unconstrained fn add_liquidity_zero_amount0_max() {
-    let (mut env, amm_address, _token0_address, _token1_address, _liquidity_token_address, _minter) =
-        setup();
+    let (mut env, amm_address, _token0_address, _token1_address, _liquidity_token_address, _minter)
+         = setup();
 
     let liquidity_provider = env.create_contract_account();
     let amm = AMM::at(amm_address);
@@ -308,8 +308,8 @@ unconstrained fn add_liquidity_zero_amount0_max() {
 
 #[test(should_fail_with = "INSUFFICIENT_INPUT_AMOUNTS")]
 unconstrained fn add_liquidity_zero_amount1_max() {
-    let (mut env, amm_address, _token0_address, _token1_address, _liquidity_token_address, _minter) =
-        setup();
+    let (mut env, amm_address, _token0_address, _token1_address, _liquidity_token_address, _minter)
+         = setup();
 
     let liquidity_provider = env.create_contract_account();
     let amm = AMM::at(amm_address);
@@ -327,8 +327,8 @@ unconstrained fn add_liquidity_zero_amount1_max() {
 
 #[test(should_fail_with = "TOKEN_IN_IS_INVALID")]
 unconstrained fn swap_exact_tokens_invalid_token_in() {
-    let (mut env, amm_address, _token0_address, token1_address, _liquidity_token_address, _minter) =
-        setup();
+    let (mut env, amm_address, _token0_address, token1_address, _liquidity_token_address, _minter)
+         = setup();
 
     let swapper = env.create_contract_account();
     let amm = AMM::at(amm_address);
@@ -351,8 +351,8 @@ unconstrained fn swap_exact_tokens_invalid_token_in() {
 
 #[test(should_fail_with = "TOKEN_OUT_IS_INVALID")]
 unconstrained fn swap_exact_tokens_invalid_token_out() {
-    let (mut env, amm_address, token0_address, _token1_address, _liquidity_token_address, _minter) =
-        setup();
+    let (mut env, amm_address, token0_address, _token1_address, _liquidity_token_address, _minter)
+         = setup();
 
     let swapper = env.create_contract_account();
     let amm = AMM::at(amm_address);
@@ -375,8 +375,8 @@ unconstrained fn swap_exact_tokens_invalid_token_out() {
 
 #[test(should_fail_with = "SAME_TOKEN_SWAP")]
 unconstrained fn swap_exact_tokens_same_tokens() {
-    let (mut env, amm_address, token0_address, _token1_address, _liquidity_token_address, _minter) =
-        setup();
+    let (mut env, amm_address, token0_address, _token1_address, _liquidity_token_address, _minter)
+         = setup();
 
     let swapper = env.create_contract_account();
     let amm = AMM::at(amm_address);
@@ -398,8 +398,8 @@ unconstrained fn swap_exact_tokens_same_tokens() {
 
 #[test(should_fail_with = "TOKEN_IN_IS_INVALID")]
 unconstrained fn swap_tokens_for_exact_invalid_token_in() {
-    let (mut env, amm_address, _token0_address, token1_address, _liquidity_token_address, _minter) =
-        setup();
+    let (mut env, amm_address, _token0_address, token1_address, _liquidity_token_address, _minter)
+         = setup();
 
     let swapper = env.create_contract_account();
     let amm = AMM::at(amm_address);
@@ -422,8 +422,8 @@ unconstrained fn swap_tokens_for_exact_invalid_token_in() {
 
 #[test(should_fail_with = "TOKEN_OUT_IS_INVALID")]
 unconstrained fn swap_tokens_for_exact_invalid_token_out() {
-    let (mut env, amm_address, token0_address, _token1_address, _liquidity_token_address, _minter) =
-        setup();
+    let (mut env, amm_address, token0_address, _token1_address, _liquidity_token_address, _minter)
+         = setup();
 
     let swapper = env.create_contract_account();
     let amm = AMM::at(amm_address);
@@ -446,8 +446,8 @@ unconstrained fn swap_tokens_for_exact_invalid_token_out() {
 
 #[test(should_fail_with = "SAME_TOKEN_SWAP")]
 unconstrained fn swap_tokens_for_exact_same_tokens() {
-    let (mut env, amm_address, token0_address, _token1_address, _liquidity_token_address, _minter) =
-        setup();
+    let (mut env, amm_address, token0_address, _token1_address, _liquidity_token_address, _minter)
+         = setup();
 
     let swapper = env.create_contract_account();
     let amm = AMM::at(amm_address);

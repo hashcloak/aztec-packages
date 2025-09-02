@@ -68,7 +68,7 @@ library FrLib {
             mstore(add(free, 0x20), 0x20)
             mstore(add(free, 0x40), 0x20)
             mstore(add(free, 0x60), v)
-            mstore(add(free, 0x80), sub(MODULUS, 2)) 
+            mstore(add(free, 0x80), sub(MODULUS, 2))
             mstore(add(free, 0xa0), MODULUS)
             let success := staticcall(gas(), 0x05, free, 0xc0, 0x00, 0x20)
             if iszero(success) {
@@ -92,7 +92,7 @@ library FrLib {
             mstore(add(free, 0x20), 0x20)
             mstore(add(free, 0x40), 0x20)
             mstore(add(free, 0x60), b)
-            mstore(add(free, 0x80), v) 
+            mstore(add(free, 0x80), v)
             mstore(add(free, 0xa0), MODULUS)
             let success := staticcall(gas(), 0x05, free, 0xc0, 0x00, 0x20)
             if iszero(success) {
@@ -494,10 +494,10 @@ library TranscriptLib {
         pure
         returns (Fr[CONST_PROOF_SIZE_LOG_N] memory gateChallenges, Fr nextPreviousChallenge)
     {
-        for (uint256 i = 0; i < logN; i++) {
-            previousChallenge = FrLib.fromBytes32(keccak256(abi.encodePacked(Fr.unwrap(previousChallenge))));
-            Fr unused;
-            (gateChallenges[i], unused) = splitChallenge(previousChallenge);
+        previousChallenge = FrLib.fromBytes32(keccak256(abi.encodePacked(Fr.unwrap(previousChallenge))));
+        (gateChallenges[0],) = splitChallenge(previousChallenge);
+        for (uint256 i = 1; i < logN; i++) {
+            gateChallenges[i] = gateChallenges[i - 1] * gateChallenges[i - 1];
         }
         nextPreviousChallenge = previousChallenge;
     }
@@ -1789,6 +1789,8 @@ abstract contract BaseHonkVerifier is IVerifier {
         return sumcheckVerified && shpleminiVerified; // Boolean condition not required - nice for vanity :)
     }
 
+    uint256 constant PERMUTATION_ARGUMENT_VALUE_SEPARATOR = 1 << 28;
+
     function computePublicInputDelta(
         bytes32[] memory publicInputs,
         Fr[PAIRING_POINTS_SIZE] memory pairingPointObject,
@@ -1799,7 +1801,7 @@ abstract contract BaseHonkVerifier is IVerifier {
         Fr numerator = ONE;
         Fr denominator = ONE;
 
-        Fr numeratorAcc = gamma + (beta * FrLib.from($N + offset));
+        Fr numeratorAcc = gamma + (beta * FrLib.from(PERMUTATION_ARGUMENT_VALUE_SEPARATOR + offset));
         Fr denominatorAcc = gamma - (beta * FrLib.from(offset + 1));
 
         {
@@ -2096,7 +2098,7 @@ abstract contract BaseHonkVerifier is IVerifier {
             commitments[NUMBER_UNSHIFTED + 1 + i] = proof.geminiFoldComms[i];
         }
 
-        // Finalise the batch opening claim
+        // Finalize the batch opening claim
         commitments[NUMBER_UNSHIFTED + $LOG_N] = Honk.G1Point({x: 1, y: 2});
         scalars[NUMBER_UNSHIFTED + $LOG_N] = mem.constantTermAccumulator;
 

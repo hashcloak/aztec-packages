@@ -1,3 +1,9 @@
+import {
+  GAS_ESTIMATION_DA_GAS_LIMIT,
+  GAS_ESTIMATION_L2_GAS_LIMIT,
+  GAS_ESTIMATION_TEARDOWN_DA_GAS_LIMIT,
+  GAS_ESTIMATION_TEARDOWN_L2_GAS_LIMIT,
+} from '@aztec/constants';
 import type { FeeOptions, TxExecutionOptions, UserFeeOptions } from '@aztec/entrypoints/interfaces';
 import type { ExecutionPayload } from '@aztec/entrypoints/payload';
 import { Fr } from '@aztec/foundation/fields';
@@ -5,8 +11,8 @@ import { createLogger } from '@aztec/foundation/log';
 import type { ContractArtifact } from '@aztec/stdlib/abi';
 import type { AuthWitness } from '@aztec/stdlib/auth-witness';
 import type { AztecAddress } from '@aztec/stdlib/aztec-address';
-import type { CompleteAddress, ContractInstanceWithAddress, NodeInfo } from '@aztec/stdlib/contract';
-import { type GasFees, GasSettings } from '@aztec/stdlib/gas';
+import type { ContractInstanceWithAddress } from '@aztec/stdlib/contract';
+import { Gas, GasSettings } from '@aztec/stdlib/gas';
 import type {
   ContractClassMetadata,
   ContractMetadata,
@@ -84,17 +90,10 @@ export abstract class BaseWallet implements Wallet {
   ): Promise<Pick<GasSettings, 'gasLimits' | 'teardownGasLimits'>> {
     // docs:end:estimateGas
     const txRequest = await this.createTxExecutionRequestFromPayloadAndFee(executionPayload, opts.from, opts.fee);
-    const simulationResult = await this.pxe.simulateTx(
-      txRequest,
-      true /*simulatePublic*/,
-      undefined /* skipTxValidation */,
-      true /* skipFeeEnforcement */,
-    );
-    const { totalGas: gasLimits, teardownGas: teardownGasLimits } = getGasLimits(
-      simulationResult,
-      opts?.fee?.estimatedGasPadding,
-    );
-    return { gasLimits, teardownGasLimits };
+    return {
+      gasLimits: txRequest.txContext.gasSettings.gasLimits,
+      teardownGasLimits: txRequest.txContext.gasSettings.teardownGasLimits,
+    };
   }
 
   /**
@@ -118,7 +117,7 @@ export abstract class BaseWallet implements Wallet {
    * @param options - Additional options for the transaction. They must faithfully represent the tx to get accurate fee estimates
    * @returns Fee options for the actual transaction.
    */
-  private async getFeeOptions(
+  protected async getFeeOptions(
     account: Account,
     executionPayload: ExecutionPayload,
     fee: UserFeeOptions = {},
@@ -132,7 +131,15 @@ export abstract class BaseWallet implements Wallet {
 
     let gasSettings = defaultFeeOptions.gasSettings;
     if (fee?.estimateGas) {
-      const feeForEstimation: FeeOptions = { paymentMethod, gasSettings };
+      // Use unrealistically high gas limits for estimation to avoid running out of gas.
+      // They will be tuned down after the simulation.
+      const gasSettingsForEstimation = new GasSettings(
+        new Gas(GAS_ESTIMATION_DA_GAS_LIMIT, GAS_ESTIMATION_L2_GAS_LIMIT),
+        new Gas(GAS_ESTIMATION_TEARDOWN_DA_GAS_LIMIT, GAS_ESTIMATION_TEARDOWN_L2_GAS_LIMIT),
+        maxFeesPerGas,
+        maxPriorityFeesPerGas,
+      );
+      const feeForEstimation: FeeOptions = { paymentMethod, gasSettings: gasSettingsForEstimation };
       const txRequest = await account.createTxExecutionRequest(executionPayload, feeForEstimation, options);
       const simulationResult = await this.pxe.simulateTx(
         txRequest,
@@ -140,10 +147,7 @@ export abstract class BaseWallet implements Wallet {
         undefined /* skipTxValidation */,
         true /* skipFeeEnforcement */,
       );
-      const { totalGas: gasLimits, teardownGas: teardownGasLimits } = getGasLimits(
-        simulationResult,
-        fee?.estimatedGasPadding,
-      );
+      const { gasLimits, teardownGasLimits } = getGasLimits(simulationResult, fee?.estimatedGasPadding);
       gasSettings = GasSettings.from({ maxFeesPerGas, maxPriorityFeesPerGas, gasLimits, teardownGasLimits });
       this.log.verbose(
         `Estimated gas limits for tx: DA=${gasLimits.daGas} L2=${gasLimits.l2Gas} teardownDA=${teardownGasLimits.daGas} teardownL2=${teardownGasLimits.l2Gas}`,

@@ -313,6 +313,66 @@ TEST(AvmSimulationAluTest, DivFFTag)
                                       .error = AluError::TAG_ERROR }));
 }
 
+TEST(AvmSimulationAluTest, FDiv)
+{
+    EventEmitter<AluEvent> alu_event_emitter;
+    StrictMock<MockGreaterThan> gt;
+    StrictMock<MockFieldGreaterThan> field_gt;
+    StrictMock<MockRangeCheck> range_check;
+    Alu alu(gt, field_gt, range_check, alu_event_emitter);
+
+    auto a = MemoryValue::from<FF>(FF::modulus - 4);
+    auto b = MemoryValue::from<FF>(2);
+
+    auto c = alu.fdiv(a, b);
+
+    EXPECT_EQ(c, MemoryValue::from<FF>(FF::modulus - 2));
+
+    auto events = alu_event_emitter.dump_events();
+    EXPECT_THAT(events, ElementsAre(AluEvent{ .operation = AluOperation::FDIV, .a = a, .b = b, .c = c }));
+}
+
+TEST(AvmSimulationAluTest, FDivByZero)
+{
+    EventEmitter<AluEvent> alu_event_emitter;
+    StrictMock<MockGreaterThan> gt;
+    StrictMock<MockFieldGreaterThan> field_gt;
+    StrictMock<MockRangeCheck> range_check;
+    Alu alu(gt, field_gt, range_check, alu_event_emitter);
+
+    auto a = MemoryValue::from<FF>(FF::modulus - 4);
+    auto b = MemoryValue::from<FF>(0);
+
+    EXPECT_THROW(alu.fdiv(a, b), AluException);
+
+    auto events = alu_event_emitter.dump_events();
+    EXPECT_THAT(
+        events,
+        ElementsAre(AluEvent{ .operation = AluOperation::FDIV, .a = a, .b = b, .error = AluError::DIV_0_ERROR }));
+}
+
+TEST(AvmSimulationAluTest, FDivNonFFTag)
+{
+    EventEmitter<AluEvent> alu_event_emitter;
+    StrictMock<MockGreaterThan> gt;
+    StrictMock<MockFieldGreaterThan> field_gt;
+    StrictMock<MockRangeCheck> range_check;
+    Alu alu(gt, field_gt, range_check, alu_event_emitter);
+
+    auto a = MemoryValue::from<uint64_t>(2);
+    auto b = MemoryValue::from<uint64_t>(2);
+
+    EXPECT_THROW(alu.fdiv(a, b), AluException);
+
+    auto events = alu_event_emitter.dump_events();
+    EXPECT_THAT(events,
+                ElementsAre(AluEvent{ .operation = AluOperation::FDIV,
+                                      .a = a,
+                                      .b = b,
+                                      .c = MemoryValue::from_tag(static_cast<MemoryTag>(0), 0),
+                                      .error = AluError::TAG_ERROR }));
+}
+
 TEST(AvmSimulationAluTest, LT)
 {
     EventEmitter<AluEvent> alu_event_emitter;
@@ -555,6 +615,119 @@ TEST(AvmSimulationAluTest, NotFFTagError)
                 ElementsAre(AluEvent{ .operation = AluOperation::NOT,
                                       .a = a,
                                       .b = MemoryValue::from_tag(static_cast<MemoryTag>(0), 0),
+                                      .error = AluError::TAG_ERROR }));
+}
+
+TEST(AvmSimulationAluTest, Shl)
+{
+    EventEmitter<AluEvent> alu_event_emitter;
+    StrictMock<MockGreaterThan> gt;
+    StrictMock<MockFieldGreaterThan> field_gt;
+    StrictMock<MockRangeCheck> range_check;
+    Alu alu(gt, field_gt, range_check, alu_event_emitter);
+
+    auto a = MemoryValue::from<uint32_t>(64);
+    auto b = MemoryValue::from<uint32_t>(2);
+
+    // a_lo and a_hi range checks:
+    EXPECT_CALL(range_check, assert_range(64, 30)).Times(1);
+    EXPECT_CALL(range_check, assert_range(0, 2)).Times(1);
+
+    auto c = alu.shl(a, b);
+
+    EXPECT_EQ(c, MemoryValue::from<uint32_t>(256));
+
+    auto events = alu_event_emitter.dump_events();
+    EXPECT_THAT(events, ElementsAre(AluEvent{ .operation = AluOperation::SHL, .a = a, .b = b, .c = c }));
+}
+
+TEST(AvmSimulationAluTest, ShlOverflow)
+{
+    EventEmitter<AluEvent> alu_event_emitter;
+    StrictMock<MockGreaterThan> gt;
+    StrictMock<MockFieldGreaterThan> field_gt;
+    StrictMock<MockRangeCheck> range_check;
+    Alu alu(gt, field_gt, range_check, alu_event_emitter);
+
+    auto a = MemoryValue::from<uint32_t>(64);
+    auto b = MemoryValue::from<uint32_t>(100);
+
+    // a_lo and a_hi range checks:
+    EXPECT_CALL(range_check, assert_range(68, 32)).Times(1);
+    EXPECT_CALL(range_check, assert_range(0, 32)).Times(1);
+
+    auto c = alu.shl(a, b);
+
+    EXPECT_EQ(c, MemoryValue::from<uint32_t>(0));
+
+    auto events = alu_event_emitter.dump_events();
+    EXPECT_THAT(events, ElementsAre(AluEvent{ .operation = AluOperation::SHL, .a = a, .b = b, .c = c }));
+}
+
+TEST(AvmSimulationAluTest, NegativeShlTagMismatch)
+{
+    EventEmitter<AluEvent> alu_event_emitter;
+    StrictMock<MockGreaterThan> gt;
+    StrictMock<MockFieldGreaterThan> field_gt;
+    StrictMock<MockRangeCheck> range_check;
+    Alu alu(gt, field_gt, range_check, alu_event_emitter);
+
+    auto a = MemoryValue::from<uint32_t>(64);
+    auto b = MemoryValue::from<uint64_t>(2);
+
+    EXPECT_THROW(alu.shl(a, b), AluException);
+
+    auto events = alu_event_emitter.dump_events();
+    EXPECT_THAT(events,
+                ElementsAre(AluEvent{ .operation = AluOperation::SHL,
+                                      .a = a,
+                                      .b = b,
+                                      .c = MemoryValue::from_tag(static_cast<MemoryTag>(0), 0),
+                                      .error = AluError::TAG_ERROR }));
+}
+
+TEST(AvmSimulationAluTest, Shr)
+{
+    EventEmitter<AluEvent> alu_event_emitter;
+    StrictMock<MockGreaterThan> gt;
+    StrictMock<MockFieldGreaterThan> field_gt;
+    StrictMock<MockRangeCheck> range_check;
+    Alu alu(gt, field_gt, range_check, alu_event_emitter);
+
+    auto a = MemoryValue::from<uint32_t>(64);
+    auto b = MemoryValue::from<uint32_t>(2);
+
+    // a_lo and a_hi range checks:
+    EXPECT_CALL(range_check, assert_range(0, 2)).Times(1);
+    EXPECT_CALL(range_check, assert_range(16, 30)).Times(1);
+
+    auto c = alu.shr(a, b);
+
+    EXPECT_EQ(c, MemoryValue::from<uint32_t>(16));
+
+    auto events = alu_event_emitter.dump_events();
+    EXPECT_THAT(events, ElementsAre(AluEvent{ .operation = AluOperation::SHR, .a = a, .b = b, .c = c }));
+}
+
+TEST(AvmSimulationAluTest, ShrFFTag)
+{
+    EventEmitter<AluEvent> alu_event_emitter;
+    StrictMock<MockGreaterThan> gt;
+    StrictMock<MockFieldGreaterThan> field_gt;
+    StrictMock<MockRangeCheck> range_check;
+    Alu alu(gt, field_gt, range_check, alu_event_emitter);
+
+    auto a = MemoryValue::from<FF>(64);
+    auto b = MemoryValue::from<FF>(2);
+
+    EXPECT_THROW(alu.shr(a, b), AluException);
+
+    auto events = alu_event_emitter.dump_events();
+    EXPECT_THAT(events,
+                ElementsAre(AluEvent{ .operation = AluOperation::SHR,
+                                      .a = a,
+                                      .b = b,
+                                      .c = MemoryValue::from_tag(static_cast<MemoryTag>(0), 0),
                                       .error = AluError::TAG_ERROR }));
 }
 

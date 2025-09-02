@@ -107,6 +107,8 @@ export class FeesTest {
     if (!numberOfAccounts) {
       throw new Error('There must be at least 1 initial account.');
     }
+    setupOptions.coinbase ??= EthAddress.random();
+    this.coinbase = setupOptions.coinbase!;
     this.logger = createLogger(`e2e:e2e_fees:${testName}`);
     this.snapshotManager = createSnapshotManager(
       `e2e_fees/${testName}-${numberOfAccounts}`,
@@ -118,7 +120,6 @@ export class FeesTest {
 
   async setup() {
     const context = await this.snapshotManager.setup();
-    await context.aztecNode.setConfig({ feeRecipient: this.sequencerAddress, coinbase: this.coinbase });
 
     this.rollupContract = RollupContract.getFromConfig(context.aztecNodeConfig);
     this.chainMonitor = new ChainMonitor(this.rollupContract, context.dateProvider, this.logger, 200).start();
@@ -214,7 +215,6 @@ export class FeesTest {
 
         const canonicalFeeJuice = await getCanonicalFeeJuice();
         this.feeJuiceContract = await FeeJuiceContract.at(canonicalFeeJuice.address, this.wallet);
-        this.coinbase = EthAddress.random();
       },
     );
   }

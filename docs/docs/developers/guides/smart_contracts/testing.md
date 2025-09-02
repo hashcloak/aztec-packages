@@ -4,6 +4,7 @@ tags: [contracts, tests, testing, noir]
 keywords: [tests, testing, noir]
 sidebar_position: 2
 importance: 1
+description: Learn how to write and run tests for your Aztec smart contracts.
 ---
 
 Aztec contracts can be tested in a variety of ways depending on the needs of a particular application and the complexity of the interactions they must support.
@@ -31,7 +32,7 @@ To summarize:
 
 ## Running Aztec Noir tests
 
-If you have [the sandbox](../../getting_started.md) installed, you can run Noir tests using:
+If you have [the sandbox](../../getting_started/getting_started_on_sandbox.md) installed, you can run Noir tests using:
 
 `aztec test`
 
@@ -176,7 +177,7 @@ For example:
 
 ## Logging
 
-You can use `aztec.nr`'s oracles as usual for debug logging, as explained [here](../../reference/debugging/index.md)
+You can use `aztec.nr`'s oracles as usual for debug logging, as explained [here](../local_env/how_to_debug.md)
 
 
 :::warning

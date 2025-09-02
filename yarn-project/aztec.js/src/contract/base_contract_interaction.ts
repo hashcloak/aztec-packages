@@ -78,26 +78,4 @@ export abstract class BaseContractInteraction {
     };
     return new SentTx(this.wallet, sendTx);
   }
-
-  // docs:start:estimateGas
-  /**
-   * Estimates gas for a given tx request and returns gas limits for it.
-   * @param options - Options.
-   * @returns Gas limits.
-   */
-  public async estimateGas(
-    options: Omit<SendMethodOptions, 'estimateGas'>,
-  ): Promise<Pick<GasSettings, 'gasLimits' | 'teardownGasLimits'>> {
-    // docs:end:estimateGas
-    const executionPayload = await this.request(options);
-    const simulationResult = await this.wallet.simulateTx(executionPayload, {
-      ...options,
-      fee: { ...options?.fee, estimateGas: false },
-    });
-    const { totalGas: gasLimits, teardownGas: teardownGasLimits } = getGasLimits(
-      simulationResult,
-      options?.fee?.estimatedGasPadding,
-    );
-    return { gasLimits, teardownGasLimits };
-  }
 }

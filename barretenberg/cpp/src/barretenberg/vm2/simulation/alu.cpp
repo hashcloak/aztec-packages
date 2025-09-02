@@ -97,6 +97,30 @@ MemoryValue Alu::div(const MemoryValue& a, const MemoryValue& b)
     }
 }
 
+MemoryValue Alu::fdiv(const MemoryValue& a, const MemoryValue& b)
+{
+    try {
+        MemoryValue c = a / b; // This will throw if the tags do not match or if we divide by 0.
+
+        if (a.get_tag() != MemoryTag::FF) {
+            // We cannot reach this case from execution because the tags are forced to be FF (see below*).
+            // TODO(MW): cleanup - It comes under the umbrella of tag errors (like NOT) but MemoryValue c = a / b does
+            // not throw, so I sin here and throw a not relevant error we know will create a TAG_ERROR:
+            throw TagMismatchException("Cannot perform field division on an integer");
+        }
+
+        events.emit({ .operation = AluOperation::FDIV, .a = a, .b = b, .c = c });
+        return c;
+    } catch (const TagMismatchException& e) {
+        // *This is unreachable from execution and exists to manage and test tag errors:
+        events.emit({ .operation = AluOperation::FDIV, .a = a, .b = b, .error = AluError::TAG_ERROR });
+        throw AluException("FDIV, " + std::string(e.what()));
+    } catch (const DivisionByZero& e) {
+        events.emit({ .operation = AluOperation::FDIV, .a = a, .b = b, .error = AluError::DIV_0_ERROR });
+        throw AluException("FDIV, " + std::string(e.what()));
+    }
+}
+
 MemoryValue Alu::eq(const MemoryValue& a, const MemoryValue& b)
 {
     // Brillig semantic enforces that tags match for EQ.
@@ -150,6 +174,62 @@ MemoryValue Alu::op_not(const MemoryValue& a)
     } catch (const InvalidOperationTag& e) {
         events.emit({ .operation = AluOperation::NOT, .a = a, .error = AluError::TAG_ERROR });
         throw AluException("NOT, " + std::string(e.what()));
+    }
+}
+
+MemoryValue Alu::shl(const MemoryValue& a, const MemoryValue& b)
+{
+    try {
+        MemoryValue c = a << b; // This will throw if the tags do not match or are FF.
+        auto tag_bits = get_tag_bits(a.get_tag());
+        auto b_num = static_cast<uint128_t>(b.as_ff());
+
+        bool overflow = b_num > tag_bits;
+        uint8_t a_lo_bits = overflow ? tag_bits : tag_bits - static_cast<uint8_t>(b_num);
+        auto a_lo =
+            overflow ? b_num - tag_bits : static_cast<uint128_t>(a.as_ff()) % (static_cast<uint128_t>(1) << a_lo_bits);
+        range_check.assert_range(a_lo, a_lo_bits);
+        range_check.assert_range(static_cast<uint128_t>(a.as_ff()) >> a_lo_bits,
+                                 overflow ? tag_bits : static_cast<uint8_t>(b_num));
+        events.emit({ .operation = AluOperation::SHL, .a = a, .b = b, .c = c });
+        return c;
+    } catch (const TagMismatchException& e) {
+        events.emit({ .operation = AluOperation::SHL, .a = a, .b = b, .error = AluError::TAG_ERROR });
+        throw AluException("SHL, " + std::string(e.what()));
+    } catch (const InvalidOperationTag& e) {
+        events.emit({ .operation = AluOperation::SHL, .a = a, .b = b, .error = AluError::TAG_ERROR });
+        throw AluException("SHL, " + std::string(e.what()));
+    } catch (const std::exception& e) {
+        // We have some err not handled by TAG_ERROR, so we rethrow back to execution:
+        throw e;
+    }
+}
+
+MemoryValue Alu::shr(const MemoryValue& a, const MemoryValue& b)
+{
+    try {
+        MemoryValue c = a >> b; // This will throw if the tags do not match or are FF.
+        auto tag_bits = get_tag_bits(a.get_tag());
+        auto b_num = static_cast<uint128_t>(b.as_ff());
+
+        bool overflow = b_num > tag_bits;
+        uint8_t a_lo_bits = overflow ? tag_bits : static_cast<uint8_t>(b_num);
+        auto a_lo =
+            overflow ? b_num - tag_bits : static_cast<uint128_t>(a.as_ff()) % (static_cast<uint128_t>(1) << a_lo_bits);
+        range_check.assert_range(a_lo, a_lo_bits);
+        range_check.assert_range(static_cast<uint128_t>(a.as_ff()) >> a_lo_bits,
+                                 overflow ? tag_bits : tag_bits - static_cast<uint8_t>(b_num));
+        events.emit({ .operation = AluOperation::SHR, .a = a, .b = b, .c = c });
+        return c;
+    } catch (const TagMismatchException& e) {
+        events.emit({ .operation = AluOperation::SHR, .a = a, .b = b, .error = AluError::TAG_ERROR });
+        throw AluException("SHR, " + std::string(e.what()));
+    } catch (const InvalidOperationTag& e) {
+        events.emit({ .operation = AluOperation::SHR, .a = a, .b = b, .error = AluError::TAG_ERROR });
+        throw AluException("SHR, " + std::string(e.what()));
+    } catch (const std::exception& e) {
+        // We have some err not handled by TAG_ERROR, so we rethrow back to execution:
+        throw e;
     }
 }
 

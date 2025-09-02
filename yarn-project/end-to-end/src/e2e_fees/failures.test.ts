@@ -1,5 +1,6 @@
 import {
   type AztecAddress,
+  EthAddress,
   Fr,
   FunctionSelector,
   PrivateFeePaymentMethod,
@@ -24,8 +25,9 @@ describe('e2e_fees failures', () => {
   let bananaCoin: BananaCoin;
   let bananaFPC: FPCContract;
   let gasSettings: GasSettings;
+  const coinbase = EthAddress.random();
 
-  const t = new FeesTest('failures');
+  const t = new FeesTest('failures', 3, { coinbase });
 
   beforeAll(async () => {
     await t.applyBaseSnapshots();

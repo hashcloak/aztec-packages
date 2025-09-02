@@ -44,6 +44,7 @@ class UltraFlavor {
     using CommitmentKey = bb::CommitmentKey<Curve>;
     using VerifierCommitmentKey = bb::VerifierCommitmentKey<Curve>;
 
+    static constexpr size_t VIRTUAL_LOG_N = CONST_PROOF_SIZE_LOG_N;
     // indicates when evaluating sumcheck, edges can be left as degree-1 monomials
     static constexpr bool USE_SHORT_MONOMIALS = true;
 
@@ -113,7 +114,7 @@ class UltraFlavor {
     static constexpr size_t OINK_PROOF_LENGTH_WITHOUT_PUB_INPUTS =
         /* 1. NUM_WITNESS_ENTITIES commitments */ (NUM_WITNESS_ENTITIES * num_frs_comm);
 
-    static constexpr size_t DECIDER_PROOF_LENGTH(size_t virtual_log_n = CONST_PROOF_SIZE_LOG_N)
+    static constexpr size_t DECIDER_PROOF_LENGTH(size_t virtual_log_n = VIRTUAL_LOG_N)
     {
         return /* 2. virtual_log_n sumcheck univariates */
             (virtual_log_n * BATCHED_RELATION_PARTIAL_LENGTH * num_frs_fr) +
@@ -124,7 +125,7 @@ class UltraFlavor {
             /* 7. KZG W commitment */ (num_frs_comm);
     }
 
-    static constexpr size_t PROOF_LENGTH_WITHOUT_PUB_INPUTS(size_t virtual_log_n = CONST_PROOF_SIZE_LOG_N)
+    static constexpr size_t PROOF_LENGTH_WITHOUT_PUB_INPUTS(size_t virtual_log_n = VIRTUAL_LOG_N)
     {
         return OINK_PROOF_LENGTH_WITHOUT_PUB_INPUTS + DECIDER_PROOF_LENGTH(virtual_log_n);
     }
@@ -136,7 +137,7 @@ class UltraFlavor {
     using ProtogalaxyTupleOfTuplesOfUnivariates =
         decltype(create_protogalaxy_tuple_of_tuples_of_univariates<Relations,
                                                                    NUM_KEYS,
-                                                                   /*optimised=*/true>());
+                                                                   /*optimized=*/true>());
 
     // Whether or not the first row of the execution trace is reserved for 0s to enable shifts
     static constexpr bool has_zero_row = true;
@@ -301,7 +302,6 @@ class UltraFlavor {
         [[nodiscard]] size_t get_polynomial_size() const { return q_c.size(); }
         [[nodiscard]] AllValues get_row(const size_t row_idx) const
         {
-            PROFILE_THIS_NAME("UltraFlavor::get_row");
             AllValues result;
             for (auto [result_field, polynomial] : zip_view(result.get_all(), get_all())) {
                 result_field = polynomial[row_idx];
@@ -386,7 +386,7 @@ class UltraFlavor {
          * proof.
          *
          */
-        void deserialize_full_transcript(size_t public_input_size, size_t virtual_log_n = CONST_PROOF_SIZE_LOG_N)
+        void deserialize_full_transcript(size_t public_input_size, size_t virtual_log_n = VIRTUAL_LOG_N)
         {
             // take current proof and put them into the struct
             auto& proof_data = this->proof_data;
@@ -427,34 +427,34 @@ class UltraFlavor {
          * modified.
          *
          */
-        void serialize_full_transcript(size_t virtual_log_n = CONST_PROOF_SIZE_LOG_N)
+        void serialize_full_transcript(size_t virtual_log_n = VIRTUAL_LOG_N)
         {
             auto& proof_data = this->proof_data;
             size_t old_proof_length = proof_data.size();
             proof_data.clear(); // clear proof_data so the rest of the function can replace it
             for (const auto& public_input : public_inputs) {
-                Base::template serialize_to_buffer(public_input, proof_data);
+                Base::serialize_to_buffer(public_input, proof_data);
             }
-            Base::template serialize_to_buffer(w_l_comm, proof_data);
-            Base::template serialize_to_buffer(w_r_comm, proof_data);
-            Base::template serialize_to_buffer(w_o_comm, proof_data);
-            Base::template serialize_to_buffer(lookup_read_counts_comm, proof_data);
-            Base::template serialize_to_buffer(lookup_read_tags_comm, proof_data);
-            Base::template serialize_to_buffer(w_4_comm, proof_data);
-            Base::template serialize_to_buffer(lookup_inverses_comm, proof_data);
-            Base::template serialize_to_buffer(z_perm_comm, proof_data);
+            Base::serialize_to_buffer(w_l_comm, proof_data);
+            Base::serialize_to_buffer(w_r_comm, proof_data);
+            Base::serialize_to_buffer(w_o_comm, proof_data);
+            Base::serialize_to_buffer(lookup_read_counts_comm, proof_data);
+            Base::serialize_to_buffer(lookup_read_tags_comm, proof_data);
+            Base::serialize_to_buffer(w_4_comm, proof_data);
+            Base::serialize_to_buffer(lookup_inverses_comm, proof_data);
+            Base::serialize_to_buffer(z_perm_comm, proof_data);
             for (size_t i = 0; i < virtual_log_n; ++i) {
-                Base::template serialize_to_buffer(sumcheck_univariates[i], proof_data);
+                Base::serialize_to_buffer(sumcheck_univariates[i], proof_data);
             }
-            Base::template serialize_to_buffer(sumcheck_evaluations, proof_data);
+            Base::serialize_to_buffer(sumcheck_evaluations, proof_data);
             for (size_t i = 0; i < virtual_log_n - 1; ++i) {
-                Base::template serialize_to_buffer(gemini_fold_comms[i], proof_data);
+                Base::serialize_to_buffer(gemini_fold_comms[i], proof_data);
             }
             for (size_t i = 0; i < virtual_log_n; ++i) {
-                Base::template serialize_to_buffer(gemini_fold_evals[i], proof_data);
+                Base::serialize_to_buffer(gemini_fold_evals[i], proof_data);
             }
-            Base::template serialize_to_buffer(shplonk_q_comm, proof_data);
-            Base::template serialize_to_buffer(kzg_w_comm, proof_data);
+            Base::serialize_to_buffer(shplonk_q_comm, proof_data);
+            Base::serialize_to_buffer(kzg_w_comm, proof_data);
 
             // sanity check to make sure we generate the same length of proof as before.
             BB_ASSERT_EQ(proof_data.size(), old_proof_length);
@@ -499,7 +499,7 @@ class UltraFlavor {
         // Don't statically check for object completeness.
         using MSGPACK_NO_STATIC_CHECK = std::true_type;
 
-        // For serialising and deserialising data
+        // For serialising and deserializing data
         MSGPACK_FIELDS(log_circuit_size,
                        num_public_inputs,
                        pub_inputs_offset,

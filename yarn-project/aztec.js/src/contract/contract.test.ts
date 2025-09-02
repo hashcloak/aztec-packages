@@ -167,6 +167,7 @@ describe('Contract Class', () => {
     };
 
     wallet = mock<Wallet>();
+    wallet.getAddress.mockReturnValue(account.address);
     wallet.simulateTx.mockResolvedValue(mockTxSimulationResult);
     account.createTxExecutionRequest.mockResolvedValue(mockTxRequest);
     wallet.getContractMetadata.mockResolvedValue({

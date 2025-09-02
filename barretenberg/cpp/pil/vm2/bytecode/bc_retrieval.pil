@@ -110,6 +110,8 @@ instance_exists {
     retrieved_bytecodes_tree_check.root
 };
 
+sel * (1 - instance_exists) * new_bytecode = 0;
+
 pol TOO_MANY_BYTECODES = no_remaining_bytecodes * new_bytecode;
 
 // We error if instance doesn't exist or if we have too many bytecodes.

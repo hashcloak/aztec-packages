@@ -63,57 +63,64 @@ void bc_retrievalImpl<FF_>::accumulate(ContainerOverSubrelations& evals,
     }
     {
         using Accumulator = typename std::tuple_element_t<5, ContainerOverSubrelations>;
-        auto tmp = in.get(C::bc_retrieval_sel) *
-                   (in.get(C::bc_retrieval_instance_exists) * (FF(1) - bc_retrieval_TOO_MANY_BYTECODES) -
-                    (FF(1) - in.get(C::bc_retrieval_error)));
+        auto tmp = in.get(C::bc_retrieval_sel) * (FF(1) - in.get(C::bc_retrieval_instance_exists)) *
+                   in.get(C::bc_retrieval_new_bytecode);
         tmp *= scaling_factor;
         std::get<5>(evals) += typename Accumulator::View(tmp);
     }
     {
         using Accumulator = typename std::tuple_element_t<6, ContainerOverSubrelations>;
-        auto tmp = (in.get(C::bc_retrieval_should_retrieve) -
-                    in.get(C::bc_retrieval_sel) * (FF(1) - in.get(C::bc_retrieval_error)));
+        auto tmp = in.get(C::bc_retrieval_sel) *
+                   (in.get(C::bc_retrieval_instance_exists) * (FF(1) - bc_retrieval_TOO_MANY_BYTECODES) -
+                    (FF(1) - in.get(C::bc_retrieval_error)));
         tmp *= scaling_factor;
         std::get<6>(evals) += typename Accumulator::View(tmp);
     }
-    { // CURRENT_CLASS_ID_IS_ZERO_IF_INSTANCE_DOES_NOT_EXIST
+    {
         using Accumulator = typename std::tuple_element_t<7, ContainerOverSubrelations>;
-        auto tmp = in.get(C::bc_retrieval_sel) * (FF(1) - in.get(C::bc_retrieval_instance_exists)) *
-                   in.get(C::bc_retrieval_current_class_id);
+        auto tmp = (in.get(C::bc_retrieval_should_retrieve) -
+                    in.get(C::bc_retrieval_sel) * (FF(1) - in.get(C::bc_retrieval_error)));
         tmp *= scaling_factor;
         std::get<7>(evals) += typename Accumulator::View(tmp);
     }
-    { // ARTIFACT_HASH_IS_ZERO_IF_ERROR
+    { // CURRENT_CLASS_ID_IS_ZERO_IF_INSTANCE_DOES_NOT_EXIST
         using Accumulator = typename std::tuple_element_t<8, ContainerOverSubrelations>;
-        auto tmp = in.get(C::bc_retrieval_error) * in.get(C::bc_retrieval_artifact_hash);
+        auto tmp = in.get(C::bc_retrieval_sel) * (FF(1) - in.get(C::bc_retrieval_instance_exists)) *
+                   in.get(C::bc_retrieval_current_class_id);
         tmp *= scaling_factor;
         std::get<8>(evals) += typename Accumulator::View(tmp);
     }
-    { // PRIVATE_FUNCTION_ROOT_IS_ZERO_IF_ERROR
+    { // ARTIFACT_HASH_IS_ZERO_IF_ERROR
         using Accumulator = typename std::tuple_element_t<9, ContainerOverSubrelations>;
-        auto tmp = in.get(C::bc_retrieval_error) * in.get(C::bc_retrieval_private_function_root);
+        auto tmp = in.get(C::bc_retrieval_error) * in.get(C::bc_retrieval_artifact_hash);
         tmp *= scaling_factor;
         std::get<9>(evals) += typename Accumulator::View(tmp);
     }
-    { // BYTECODE_ID_IS_ZERO_IF_ERROR
+    { // PRIVATE_FUNCTION_ROOT_IS_ZERO_IF_ERROR
         using Accumulator = typename std::tuple_element_t<10, ContainerOverSubrelations>;
-        auto tmp = in.get(C::bc_retrieval_error) * in.get(C::bc_retrieval_bytecode_id);
+        auto tmp = in.get(C::bc_retrieval_error) * in.get(C::bc_retrieval_private_function_root);
         tmp *= scaling_factor;
         std::get<10>(evals) += typename Accumulator::View(tmp);
     }
-    {
+    { // BYTECODE_ID_IS_ZERO_IF_ERROR
         using Accumulator = typename std::tuple_element_t<11, ContainerOverSubrelations>;
-        auto tmp = in.get(C::bc_retrieval_error) * (in.get(C::bc_retrieval_next_retrieved_bytecodes_tree_root) -
-                                                    in.get(C::bc_retrieval_prev_retrieved_bytecodes_tree_root));
+        auto tmp = in.get(C::bc_retrieval_error) * in.get(C::bc_retrieval_bytecode_id);
         tmp *= scaling_factor;
         std::get<11>(evals) += typename Accumulator::View(tmp);
     }
     {
         using Accumulator = typename std::tuple_element_t<12, ContainerOverSubrelations>;
+        auto tmp = in.get(C::bc_retrieval_error) * (in.get(C::bc_retrieval_next_retrieved_bytecodes_tree_root) -
+                                                    in.get(C::bc_retrieval_prev_retrieved_bytecodes_tree_root));
+        tmp *= scaling_factor;
+        std::get<12>(evals) += typename Accumulator::View(tmp);
+    }
+    {
+        using Accumulator = typename std::tuple_element_t<13, ContainerOverSubrelations>;
         auto tmp = in.get(C::bc_retrieval_error) * (in.get(C::bc_retrieval_next_retrieved_bytecodes_tree_size) -
                                                     in.get(C::bc_retrieval_prev_retrieved_bytecodes_tree_size));
         tmp *= scaling_factor;
-        std::get<12>(evals) += typename Accumulator::View(tmp);
+        std::get<13>(evals) += typename Accumulator::View(tmp);
     }
 }
 

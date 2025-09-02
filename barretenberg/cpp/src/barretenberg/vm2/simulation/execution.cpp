@@ -17,6 +17,7 @@
 #include "barretenberg/vm2/common/to_radix.hpp"
 #include "barretenberg/vm2/common/uint1.hpp"
 #include "barretenberg/vm2/simulation/addressing.hpp"
+#include "barretenberg/vm2/simulation/bytecode_manager.hpp"
 #include "barretenberg/vm2/simulation/context.hpp"
 #include "barretenberg/vm2/simulation/events/addressing_event.hpp"
 #include "barretenberg/vm2/simulation/events/execution_event.hpp"
@@ -1076,10 +1077,11 @@ ExecutionResult Execution::execute(std::unique_ptr<ContextInterface> enqueued_ca
 
             //// Temporality group 1 starts ////
 
-            // We try to get the bytecode id. This can throw if the contract is not deployed.
-            // Note: bytecode_id is tracked in context events, not in the top-level execution event.
-            // It is already included in the before_context_event (defaulting to 0 on error/not-found).
-            context.get_bytecode_manager().get_bytecode_id();
+            // We try to get the bytecode id. This can throw if the contract is not deployed or if we have retrieved too
+            // many unique class ids. Note: bytecode_id is tracked in context events, not in the top-level execution
+            // event. It is already included in the before_context_event (defaulting to 0 on error/not-found).
+            BytecodeId id = context.get_bytecode_manager().get_bytecode_id();
+            context.set_bytecode_id(id);
 
             //// Temporality group 2 starts ////
 
@@ -1105,6 +1107,10 @@ ExecutionResult Execution::execute(std::unique_ptr<ContextInterface> enqueued_ca
         catch (const BytecodeNotFoundError& e) {
             vinfo("Bytecode not found: ", e.what());
             ex_event.error = ExecutionError::BYTECODE_NOT_FOUND;
+            handle_exceptional_halt(context);
+        } catch (const BytecodeRetrievalLimitReachedError& e) {
+            vinfo("Bytecode retrieval limit reached: ", e.what());
+            ex_event.error = ExecutionError::BYTECODE_RETRIEVAL_LIMIT_REACHED;
             handle_exceptional_halt(context);
         } catch (const InstructionFetchingError& e) {
             vinfo("Instruction fetching error: ", e.what());
@@ -1165,7 +1171,7 @@ void Execution::handle_enter_call(ContextInterface& parent_context, std::unique_
           .next_pc = parent_context.get_next_pc(),
           .msg_sender = parent_context.get_msg_sender(),
           .contract_addr = parent_context.get_address(),
-          .bytecode_id = parent_context.get_bytecode_manager().try_get_bytecode_id().value_or(FF(0)),
+          .bytecode_id = parent_context.get_bytecode_id().value(), // Should never be nullopt when entering a call
           .is_static = parent_context.get_is_static(),
           .parent_cd_addr = parent_context.get_parent_cd_addr(),
           .parent_cd_size = parent_context.get_parent_cd_size(),

@@ -21,6 +21,7 @@ namespace bb::avm2::simulation {
 enum class ExecutionError {
     NONE,
     BYTECODE_NOT_FOUND,
+    BYTECODE_RETRIEVAL_LIMIT_REACHED,
     INSTRUCTION_FETCHING,
     ADDRESSING,
     REGISTER_READ,

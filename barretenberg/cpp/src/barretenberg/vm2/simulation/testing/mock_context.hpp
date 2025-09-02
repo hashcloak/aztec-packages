@@ -73,6 +73,9 @@ class MockContext : public ContextInterface {
 
     MOCK_METHOD(uint32_t, get_checkpoint_id_at_creation, (), (const, override));
 
+    MOCK_METHOD(std::optional<BytecodeId>, get_bytecode_id, (), (const, override));
+    MOCK_METHOD(void, set_bytecode_id, (BytecodeId bytecode_id), (override));
+
     // Event Emitting
     MOCK_METHOD(ContextEvent, serialize_context_event, (), (override));
 };

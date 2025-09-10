@@ -30,9 +30,7 @@ inline void output_vk_sway_ultra_honk(std::ostream& os, auto const& key)
       "use std::hash::keccak256;\n"
       "use std::array_conversions::u256::*;\n"
       "use std::bytes_conversions::u256::*;\n"
-      "use std::bytes::Bytes;\n\n"
-      "// TODO remove\n"
-      "use std::logging::log;\n\n";
+      "use std::bytes::Bytes;\n\n";
 
     // Constants
     os << "const N: u256 = " << std::dec << key->circuit_size << ";\n";

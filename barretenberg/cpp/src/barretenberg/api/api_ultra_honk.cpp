@@ -272,7 +272,7 @@ void UltraHonkAPI::write_sway_verifier([[maybe_unused]] const Flags& flags,
         std::cout << contract;
     } else {
         write_file(output_path, { contract.begin(), contract.end() });
-        info("Honk Sway verifier saved to ", output_path);
+        info("Sway verifier saved to ", output_path);
     }
 }
 

@@ -127,7 +127,7 @@ const X2y1: u256 = 0x22febda3c0c0632a56475b4214e5615e11e6dd3f96e6cea2854a87d4dac
 const X2y2: u256 = 0x04fc6369f7110fe3d25156c1bb9a72859cf2a04641f99ba4ee413c80da6a5fe4u256;
 
 
-pub fn convert_proof_point(input: G1ProofPoint) -> G1Point {
+fn convert_proof_point(input: G1ProofPoint) -> G1Point {
     G1Point {
         x: input.x[0] | (input.x[1] << 136),
         y: input.y[0] | (input.y[1] << 136),
@@ -136,7 +136,7 @@ pub fn convert_proof_point(input: G1ProofPoint) -> G1Point {
 
 impl G1Point {
 
-    pub fn point_add(self, other: G1Point) -> Self {
+    fn point_add(self, other: G1Point) -> Self {
         let mut input: [u256; 4] = [0; 4];
         let mut output: [u256; 2] = [0; 2];
 
@@ -157,7 +157,7 @@ impl G1Point {
         }
     }
 
-    pub fn u256_mul(self, s: u256) -> Self {
+    fn u256_mul(self, s: u256) -> Self {
         let mut input: [u256; 3] = [0; 3];
         let mut output: [u256; 2] = [0; 2];
 
@@ -179,7 +179,7 @@ impl G1Point {
 }
 
 // 70 = N = NUMBER_OF_ENTITIES + CONST_PROOF_SIZE_LOG_N + 2
-pub fn batch_mul(points: [G1Point; 70], scalars: [u256; 70]) -> G1Point {
+fn batch_mul(points: [G1Point; 70], scalars: [u256; 70]) -> G1Point {
     let mut acc = points[0].u256_mul(scalars[0]);
     let mut i = 1;
     while i < 70 {
@@ -337,8 +337,8 @@ pub struct Transcript {
     pub shplonk_z: u256,
 }
 
-pub fn generate_transcript(proof: Proof, public_inputs: [u256;${PUB_INPUT_SIZE}], circuit_size: u256, pub_inputs_offset: u256)  -> Transcript {
-    let (relation_parameters, previous_challenge0): (RelationParameters, u256) = generate_relation_parameters_challenges(proof, public_inputs, circuit_size, pub_inputs_offset);
+${TRANSCRIPT_SIGNATURE} {
+    let (relation_parameters, previous_challenge0): (RelationParameters, u256) = generate_relation_parameters_challenges(proof, ${PUBLIC_INPUTS_ARGUMENT} circuit_size, pub_inputs_offset);
 
     let (alphas, previous_challenge1): ([u256; 25], u256)  = generate_alpha_challenges(proof, previous_challenge0);
 
@@ -368,7 +368,7 @@ pub fn generate_transcript(proof: Proof, public_inputs: [u256;${PUB_INPUT_SIZE}]
 
 // Takes a field element and splits it into high and low
 // (the result will be in field as well)
-pub fn split_challenge(challenge: u256) -> (u256, u256) {
+fn split_challenge(challenge: u256) -> (u256, u256) {
     let lo_mask: u256 = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFu256;
 
     let lo: u256 = challenge & lo_mask;
@@ -377,13 +377,8 @@ pub fn split_challenge(challenge: u256) -> (u256, u256) {
     (lo, hi)
 }
 
-pub fn generate_relation_parameters_challenges(
-  proof: Proof,
-  public_inputs: [u256;${PUB_INPUT_SIZE}],
-  circuit_size: u256,
-  pub_inputs_offset: u256,
-) -> (RelationParameters, u256) {
-  let eta_res = generate_eta_challenge(proof, public_inputs, circuit_size, pub_inputs_offset);
+${RELATION_PARAMETERS_SIGNATURE} {
+  let eta_res = generate_eta_challenge(proof, ${PUBLIC_INPUTS_ARGUMENT} circuit_size, pub_inputs_offset);
   let previous_challenge = eta_res[3];
   let beta_gamma_res = generate_beta_and_gamma_challenges(proof, previous_challenge);
 
@@ -397,14 +392,7 @@ pub fn generate_relation_parameters_challenges(
   }, beta_gamma_res[2])
 }
 
-// uses 3 + NUMBER_OF_PUBLIC_INPUTS + 12
-const ROUND0_LEN: u64 = 32;
-pub fn generate_eta_challenge(
-    proof: Proof,
-    public_inputs: [u256; ${PUB_INPUT_SIZE}],
-    circuit_size: u256,
-    pub_inputs_offset: u256,
-) -> [u256; 4] {
+${ETA_CHALLENGE_SIGNATURE} {
     let mut transcript = Bytes::new();
 
     // Append meta
@@ -413,11 +401,7 @@ pub fn generate_eta_challenge(
     transcript.append(pub_inputs_offset.to_be_bytes());
 
     // Public inputs
-    let mut i = 0;
-    while i < NUMBER_OF_PUBLIC_INPUTS - PAIRING_POINTS_SIZE {
-        transcript.append(public_inputs[i].to_be_bytes());
-        i += 1;
-    }
+    ${ETA_CHALLENGE_FORLOOP}
 
     // Pairing point objects
     let mut j = 0;
@@ -460,7 +444,7 @@ pub fn generate_eta_challenge(
     [eta, eta_two, eta_three, hash_1_field]
 }
 
-pub fn generate_beta_and_gamma_challenges(
+fn generate_beta_and_gamma_challenges(
     proof: Proof,
     previous_challenge: u256,
 ) -> [u256; 3] {
@@ -501,7 +485,7 @@ pub fn generate_beta_and_gamma_challenges(
     [beta, gamma, next_previous_field]
 }
 
-pub fn generate_alpha_challenges(
+fn generate_alpha_challenges(
   proof: Proof,
   previous_challenge: u256,
 ) -> ([u256; 25], u256) { // NUMBER_OF_ALPHAS = 25
@@ -557,7 +541,7 @@ pub fn generate_alpha_challenges(
 }
 
 // CONST_PROOF_SIZE_LOG_N = 28
-pub fn generate_gate_challenges(previous_challenge: u256) -> ([u256; 28], u256) {
+fn generate_gate_challenges(previous_challenge: u256) -> ([u256; 28], u256) {
     let mut i = 0;
     let mut temp_previous_challenge_field: u256 = previous_challenge;
     let mut gate_challenges: [u256; 28] = [0u256;28];
@@ -574,7 +558,7 @@ pub fn generate_gate_challenges(previous_challenge: u256) -> ([u256; 28], u256) 
 }
 
 // CONST_PROOF_SIZE_LOG_N = 28
-pub fn generate_sumcheck_challenges(proof: Proof, prev_challenge: u256) -> ([u256; 28], u256) {
+fn generate_sumcheck_challenges(proof: Proof, prev_challenge: u256) -> ([u256; 28], u256) {
     let mut i = 0;
     let mut prev_challenge_field = prev_challenge;
     let mut sumcheck_challenges: [u256; 28] = [0;28];
@@ -598,7 +582,7 @@ pub fn generate_sumcheck_challenges(proof: Proof, prev_challenge: u256) -> ([u25
 }
 
 // NUMBER_OF_ENTITIES = 40, length of array is +1
-pub fn generate_rho_challenge(proof: Proof, next_previous_challenge: u256) -> ([u256;41], u256, u256) {
+fn generate_rho_challenge(proof: Proof, next_previous_challenge: u256) -> ([u256;41], u256, u256) {
     let mut rho_challenge_elements: [u256; 41] = [0u256;41];
     let mut transcript = Bytes::new();
     rho_challenge_elements[0] = next_previous_challenge;
@@ -622,7 +606,7 @@ pub fn generate_rho_challenge(proof: Proof, next_previous_challenge: u256) -> ([
 }
 
 // 109 = (CONST_PROOF_SIZE_LOG_N - 1) * 4 + 1
-pub fn generate_gemini_R_challenge(proof: Proof, prev_challenge: u256) -> ([u256;109], u256, u256) {
+fn generate_gemini_R_challenge(proof: Proof, prev_challenge: u256) -> ([u256;109], u256, u256) {
     let mut g_R: [u256;109] = [0u256; 109];
     let mut transcript = Bytes::new();
     g_R[0] = prev_challenge;
@@ -652,7 +636,7 @@ pub fn generate_gemini_R_challenge(proof: Proof, prev_challenge: u256) -> ([u256
 }
 
 // 29 = (CONST_PROOF_SIZE_LOG_N) + 1
-pub fn generate_shplonk_nu_challenge(proof: Proof, prev_challenge: u256) -> ([u256; 29], u256, u256) {
+fn generate_shplonk_nu_challenge(proof: Proof, prev_challenge: u256) -> ([u256; 29], u256, u256) {
     // CONST_PROOF_SIZE_LOG_N + 1
     let mut shplonk_nu_challenge_elements: [u256; 29] = [0u256; 29];
     let mut transcript = Bytes::new();
@@ -676,7 +660,7 @@ pub fn generate_shplonk_nu_challenge(proof: Proof, prev_challenge: u256) -> ([u2
 }
 
 // fixed 5
-pub fn generate_shplonk_z_challenge(proof: Proof, prev_challenge: u256) -> ([u256;5], u256, u256) {
+fn generate_shplonk_z_challenge(proof: Proof, prev_challenge: u256) -> ([u256;5], u256, u256) {
     let mut shplonk_Z_challenge: [u256;5] = [0u256;5];
     let mut transcript = Bytes::new();
     shplonk_Z_challenge[0] = prev_challenge;
@@ -703,7 +687,7 @@ const NEG_HALF_MODULO_P: u256 = 0x183227397098d014dc2822db40c0ac2e9419f4243cdcb8
 
 // 40 = NUMBER_OF_ENTITIES
 // In Sway we use constant values for indices instead of enums
-pub fn accumulate_arithmetic_relation(p: [u256; 40], domain_sep: u256) -> (u256, u256) {
+fn accumulate_arithmetic_relation(p: [u256; 40], domain_sep: u256) -> (u256, u256) {
     let q_arith: u256 = p[WIRE_Q_ARITH];
 
     // Relation 0
@@ -735,7 +719,7 @@ pub fn accumulate_arithmetic_relation(p: [u256; 40], domain_sep: u256) -> (u256,
 }
 
 // 16 = PAIRING_POINTS_SIZE
-pub fn compute_public_input_delta(public_inputs: [u256; ${PUB_INPUT_SIZE}], pairing_point_object: [u256; 16], beta: u256, gamma: u256, offset: u256) -> u256 {
+${PUBLIC_INPUTS_DELTA_SIGNATURE} {
 
     let mut numerator: u256 = 1u256;
     let mut denominator: u256 = 1u256;
@@ -743,16 +727,7 @@ pub fn compute_public_input_delta(public_inputs: [u256; ${PUB_INPUT_SIZE}], pair
     let mut denominator_acc: u256 = gamma.submod(beta.mulmod(offset.addmod(1u256)));
 
     let mut i = 0;
-    while i < (NUMBER_OF_PUBLIC_INPUTS - PAIRING_POINTS_SIZE) {
-        let pub_input = public_inputs[i];
-        numerator = numerator.mulmod(numerator_acc.addmod(pub_input));
-        denominator = denominator.mulmod(denominator_acc.addmod(pub_input));
-        numerator_acc = numerator_acc.addmod(beta);
-        denominator_acc = denominator_acc.submod(beta);
-        i += 1;
-    }
-
-    i = 0;
+    ${PUBLIC_INPUTS_DELTA_FORLOOP}
 
     while i < PAIRING_POINTS_SIZE {
         let pub_input = pairing_point_object[i];
@@ -767,7 +742,7 @@ pub fn compute_public_input_delta(public_inputs: [u256; ${PUB_INPUT_SIZE}], pair
 }
 
 // 40 = NUMBER_OF_ENTITIES
-pub fn accumulate_permutation_relation(
+fn accumulate_permutation_relation(
   p: [u256; 40],
   rp: RelationParameters,
   domain_sep: u256,
@@ -799,7 +774,7 @@ pub fn accumulate_permutation_relation(
 }
 
 // 40 = NUMBER_OF_ENTITIES
-pub fn accumulate_log_derivative_lookup_relation(
+fn accumulate_log_derivative_lookup_relation(
   p: [u256; 40],
   rp: RelationParameters,
   domain_sep: u256) -> (u256, u256) {
@@ -846,7 +821,7 @@ pub fn accumulate_log_derivative_lookup_relation(
 }
 
 // 40 = NUMBER_OF_ENTITIES
-pub fn accumulate_delta_range_relation(
+fn accumulate_delta_range_relation(
     p: [u256; 40],
     domain_sep: u256,
 ) -> (u256, u256, u256, u256) {
@@ -896,7 +871,7 @@ pub fn accumulate_delta_range_relation(
 }
 
 // 40 = NUMBER_OF_ENTITIES
-pub fn accumulate_elliptic_relation(
+fn accumulate_elliptic_relation(
     p: [u256; 40],
     domain_sep: u256,
 ) -> (u256, u256) {
@@ -985,7 +960,7 @@ const SUBLIMB_SHIFT: u256 = 0x4000u256;
 const LIMB_SIZE:    u256 = 0x100000000000000000u256;
 
 // 40 = NUMBER_OF_ENTITIES
-pub fn accumulate_auxiliary_relation(
+fn accumulate_auxiliary_relation(
     p: [u256; 40],
     rp: RelationParameters,
     domain_sep: u256,
@@ -1120,7 +1095,7 @@ pub fn accumulate_auxiliary_relation(
 }
 
 // 40 = NUMBER_OF_ENTITIES
-pub fn accumulate_poseidon_external_relation(
+fn accumulate_poseidon_external_relation(
     p: [u256; 40],
     domain_sep: u256,
 ) -> (u256, u256, u256, u256) {
@@ -1165,7 +1140,7 @@ pub fn accumulate_poseidon_external_relation(
 }
 
 // 40 = NUMBER_OF_ENTITIES
-pub fn accumulate_poseidon_internal_relation(
+fn accumulate_poseidon_internal_relation(
     p: [u256; 40],
     domain_sep: u256,
 ) -> (u256, u256, u256, u256) {
@@ -1207,7 +1182,7 @@ pub fn accumulate_poseidon_internal_relation(
 
 // 26 = NUMBER_OF_SUBRELATIONS
 // 25 = NUMBER_OF_ALPHAS
-pub fn scale_and_batch_subrelations(
+fn scale_and_batch_subrelations(
     evaluations: [u256; 26],
     subrelation_challenges: [u256; 25],
 ) -> u256 {
@@ -1224,7 +1199,7 @@ pub fn scale_and_batch_subrelations(
 
 // 40 = NUMBER_OF_ENTITIES
 // 25 = NUMBER_OF_ALPHAS
-pub fn accumulate_relation_evaluations(
+fn accumulate_relation_evaluations(
   p: [u256; 40],
   rp: RelationParameters,
   alphas: [u256; 25],
@@ -1269,7 +1244,7 @@ pub fn accumulate_relation_evaluations(
 }
 
 // 8 = BATCHED_RELATION_PARTIAL_LENGTH
-pub fn compute_next_target_sum(
+fn compute_next_target_sum(
     round_univariates: [u256; 8],
     round_challenge: u256,
 ) -> u256 {
@@ -1320,7 +1295,7 @@ pub fn compute_next_target_sum(
     target_sum
 }
 
-pub fn partially_evaluate_pow(
+fn partially_evaluate_pow(
     gate_challenge: u256,
     current_evaluation: u256,
     round_challenge: u256,
@@ -1334,7 +1309,7 @@ pub fn partially_evaluate_pow(
 }
 
 // 8 = BATCHED_RELATION_PARTIAL_LENGTH
-pub fn check_sum(
+fn check_sum(
     round_univariate: [u256; 8],
     round_target: u256,
 ) -> bool {
@@ -1342,7 +1317,7 @@ pub fn check_sum(
     total_sum == round_target
 }
 
-pub fn verify_sumcheck(
+fn verify_sumcheck(
     proof: Proof,
     transcript: Transcript,
 ) -> bool {
@@ -1384,7 +1359,7 @@ pub fn verify_sumcheck(
 }
 
 // 28 = CONST_PROOF_SIZE_LOG_N
-pub fn compute_squares(r: u256) -> [u256; 28] {
+fn compute_squares(r: u256) -> [u256; 28] {
     let mut squares: [u256; 28] = [0u256; 28];
     squares[0] = r;
 
@@ -1398,7 +1373,7 @@ pub fn compute_squares(r: u256) -> [u256; 28] {
 }
 
 // 28 = CONST_PROOF_SIZE_LOG_N
-pub fn compute_fold_pos_evaluations(
+fn compute_fold_pos_evaluations(
     sumcheck_u_challenges: [u256; 28],
     batched_eval_accumulator: u256,
     gemini_evaluations: [u256; 28],
@@ -1435,7 +1410,7 @@ pub fn compute_fold_pos_evaluations(
     fold_pos_evaluations
 }
 
-pub fn pairing(
+fn pairing(
     P_0: G1Point,
     P_1: G1Point,
 ) -> bool {
@@ -1472,7 +1447,7 @@ pub fn pairing(
       result != 0
 }
 
-pub fn verify_shplemini(proof: Proof, vk: VerificationKey, tp: Transcript) -> bool {
+fn verify_shplemini(proof: Proof, vk: VerificationKey, tp: Transcript) -> bool {
     // - Compute vector (r, r², ... , r²⁽ⁿ⁻¹⁾), where n = log_circuit_size
     // 28 = CONST_PROOF_SIZE_LOG_N
     let powers_of_evaluation_challenge: [u256; 28] = compute_squares(tp.gemini_r);
@@ -1620,7 +1595,7 @@ pub fn verify_shplemini(proof: Proof, vk: VerificationKey, tp: Transcript) -> bo
     pairing(p_0, p_1)
 }
 
-pub fn verify(p: Proof, vk: VerificationKey, public_inputs: [u256; ${PUB_INPUT_SIZE}]) -> bool {
+${LIBRARY_VERIFY_SIGNATURE} {
     let expected_pub_inputs: u64 = NUMBER_OF_PUBLIC_INPUTS - PAIRING_POINTS_SIZE;
     if expected_pub_inputs != ${PUB_INPUT_SIZE}u64 {
         panic VerifierErrors::PublicInputsLengthWrong;
@@ -1629,13 +1604,13 @@ pub fn verify(p: Proof, vk: VerificationKey, public_inputs: [u256; ${PUB_INPUT_S
     // Generate the fiat shamir challenges for the whole protocol
     // TODO(https://github.com/AztecProtocol/barretenberg/issues/1281): Add pubInputsOffset to VK or remove entirely.
     // Now pubInputsOffset is fixed to 1
-    let mut t: Transcript = generate_transcript(p, public_inputs, vk.circuit_size, 1u256);
+    let mut t: Transcript = generate_transcript(p, ${PUBLIC_INPUTS_ARGUMENT} vk.circuit_size, 1u256);
 
     // Derive public input delta
     // TODO(https://github.com/AztecProtocol/barretenberg/issues/1281): Add pubInputsOffset to VK or remove entirely.
     // Now pubInputsOffset is fixed to 1
     t.relation_parameters.public_inputs_delta = compute_public_input_delta(
-        public_inputs,
+        ${PUBLIC_INPUTS_ARGUMENT}
         p.pairing_point_object,
         t.relation_parameters.beta,
         t.relation_parameters.gamma,
@@ -1657,16 +1632,14 @@ pub fn verify(p: Proof, vk: VerificationKey, public_inputs: [u256; ${PUB_INPUT_S
 }
 
 abi MyContract {
-    fn verify_proof(proof: Proof, public_inputs: [u256; ${PUB_INPUT_SIZE}]) -> bool;
+    ${VERIFY_SIGNATURE};
 }
 
 impl MyContract for Contract {
-    fn verify_proof(proof: Proof, public_inputs: [u256; ${PUB_INPUT_SIZE}]) -> bool {
+    ${VERIFY_SIGNATURE} {
         let vk: VerificationKey = load_vk();
         let res: bool = verify(
-            proof,
-            vk,
-            public_inputs
+            ${VERIFY_ARGUMENTS}
         );
         return res;
     }
@@ -1691,7 +1664,52 @@ inline std::string get_honk_sway_verifier(auto const& verification_key)
     std::string contract = HONK_SWAY_CONTRACT_SOURCE;
     // Obtain actual number of public inputs
     size_t num_pub_inputs = verification_key->num_public_inputs - 16;
-    // Replace placeholders with actual value (Sway doesn't support dynamic array size)
+
+    // Replace placeholders correctly:
+    // - Dynamic input size is not supported in Sway, so the variable arraysizes need to be hardcoded
+    // - Handle num_pub_inputs == 0 by removing all public_inputs references
+    if (num_pub_inputs == 0) {
+        replace_all(contract, "${TRANSCRIPT_SIGNATURE}",
+            "fn generate_transcript(proof: Proof, circuit_size: u256, pub_inputs_offset: u256) -> Transcript");
+        replace_all(contract, "${RELATION_PARAMETERS_SIGNATURE}",
+            "fn generate_relation_parameters_challenges(proof: Proof, circuit_size: u256, pub_inputs_offset: u256) -> (RelationParameters, u256)");
+        replace_all(contract, "${ETA_CHALLENGE_SIGNATURE}",
+            "fn generate_eta_challenge(proof: Proof, circuit_size: u256, pub_inputs_offset: u256) -> [u256; 4]");
+        replace_all(contract, "${ETA_CHALLENGE_FORLOOP}", "");
+        replace_all(contract, "${PUBLIC_INPUTS_ARGUMENT}", "");
+        replace_all(contract, "${PUBLIC_INPUTS_DELTA_SIGNATURE}",
+            "fn compute_public_input_delta(pairing_point_object: [u256;16], beta: u256, gamma: u256, offset: u256) -> u256");
+        replace_all(contract, "${PUBLIC_INPUTS_DELTA_FORLOOP}", "");
+        replace_all(contract, "${LIBRARY_VERIFY_SIGNATURE}",
+            "fn verify(p: Proof, vk: VerificationKey) -> bool");
+        replace_all(contract, "${VERIFY_SIGNATURE}",
+            "fn verify_proof(proof: Proof) -> bool");
+        replace_all(contract, "${VERIFY_ARGUMENTS}",
+            "proof, vk");
+    } else {
+        // With public inputs
+        replace_all(contract, "${TRANSCRIPT_SIGNATURE}",
+            "fn generate_transcript(proof: Proof, public_inputs: [u256; ${PUB_INPUT_SIZE}], circuit_size: u256, pub_inputs_offset: u256) -> Transcript");
+        replace_all(contract, "${RELATION_PARAMETERS_SIGNATURE}",
+            "fn generate_relation_parameters_challenges(proof: Proof, public_inputs: [u256; ${PUB_INPUT_SIZE}], circuit_size: u256, pub_inputs_offset: u256) -> (RelationParameters, u256)");
+        replace_all(contract, "${ETA_CHALLENGE_SIGNATURE}",
+            "fn generate_eta_challenge(proof: Proof, public_inputs: [u256; ${PUB_INPUT_SIZE}], circuit_size: u256, pub_inputs_offset: u256) -> [u256; 4]");
+        replace_all(contract, "${ETA_CHALLENGE_FORLOOP}",
+            "let mut i = 0;\n    while i < ${PUB_INPUT_SIZE} {\n        transcript.append(public_inputs[i].to_be_bytes());\n        i += 1;\n    }");
+        replace_all(contract, "${PUBLIC_INPUTS_ARGUMENT}", "public_inputs, ");
+        replace_all(contract, "${PUBLIC_INPUTS_DELTA_SIGNATURE}",
+            "fn compute_public_input_delta(public_inputs: [u256; ${PUB_INPUT_SIZE}], pairing_point_object: [u256;16], beta: u256, gamma: u256, offset: u256) -> u256");
+        replace_all(contract, "${PUBLIC_INPUTS_DELTA_FORLOOP}",
+            "while i < ${PUB_INPUT_SIZE} {\n        let pub_input = public_inputs[i];\n        numerator = numerator.mulmod(numerator_acc.addmod(pub_input));\n        denominator = denominator.mulmod(denominator_acc.addmod(pub_input));\n        numerator_acc = numerator_acc.addmod(beta);\n        denominator_acc = denominator_acc.submod(beta);\n        i += 1;\n    }\n        i=0;\n");
+        replace_all(contract, "${LIBRARY_VERIFY_SIGNATURE}",
+            "fn verify(p: Proof, vk: VerificationKey, public_inputs: [u256; ${PUB_INPUT_SIZE}]) -> bool");
+        replace_all(contract, "${VERIFY_SIGNATURE}",
+            "fn verify_proof(proof: Proof, public_inputs: [u256; ${PUB_INPUT_SIZE}]) -> bool");
+        replace_all(contract, "${VERIFY_ARGUMENTS}",
+            "proof, vk, public_inputs");
+    }
+
     replace_all(contract, "${PUB_INPUT_SIZE}", std::to_string(num_pub_inputs));
+
     return stream.str() + contract;
 }

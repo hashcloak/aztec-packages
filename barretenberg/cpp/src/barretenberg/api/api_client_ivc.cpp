@@ -188,6 +188,13 @@ void ClientIVCAPI::write_solidity_verifier([[maybe_unused]] const Flags& flags,
     throw_or_abort("API function contract not implemented");
 }
 
+void ClientIVCAPI::write_sway_verifier([[maybe_unused]] const Flags& flags,
+                                           [[maybe_unused]] const std::filesystem::path& output_path,
+                                           [[maybe_unused]] const std::filesystem::path& vk_path)
+{
+    throw_or_abort("API function contract not implemented");
+}
+
 bool ClientIVCAPI::check_precomputed_vks(const std::filesystem::path& input_path)
 
 {

@@ -65,5 +65,9 @@ class API {
     virtual void write_solidity_verifier(const Flags& flags,
                                          const std::filesystem::path& output_path,
                                          const std::filesystem::path& vk_path) = 0;
+
+    virtual void write_sway_verifier(const Flags& flags,
+                                         const std::filesystem::path& output_path,
+                                         const std::filesystem::path& vk_path) = 0;
 };
 } // namespace bb

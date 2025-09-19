@@ -9,6 +9,7 @@
 #include "barretenberg/dsl/acir_format/proof_surgeon.hpp"
 #include "barretenberg/dsl/acir_proofs/honk_contract.hpp"
 #include "barretenberg/dsl/acir_proofs/honk_zk_contract.hpp"
+#include "barretenberg/dsl/acir_proofs/honk_sway_contract.hpp"
 #include "barretenberg/honk/proof_system/types/proof.hpp"
 #include "barretenberg/honk/types/aggregation_object_type.hpp"
 #include "barretenberg/srs/global_crs.hpp"
@@ -257,6 +258,24 @@ void UltraHonkAPI::write_solidity_verifier(const Flags& flags,
         info("Solidity verifier saved to ", output_path);
     }
 }
+
+void UltraHonkAPI::write_sway_verifier([[maybe_unused]] const Flags& flags,
+                                       const std::filesystem::path& output_path,
+                                       const std::filesystem::path& vk_path)
+{
+    using VK = UltraKeccakFlavor::VerificationKey;
+    auto vk = std::make_shared<VK>(from_buffer<VK>(read_file(vk_path)));
+
+    std::string contract = get_honk_sway_verifier(vk);
+
+    if (output_path == "-") {
+        std::cout << contract;
+    } else {
+        write_file(output_path, { contract.begin(), contract.end() });
+        info("Sway verifier saved to ", output_path);
+    }
+}
+
 
 template <typename Flavor>
 void write_recursion_inputs_ultra_honk(const std::string& bytecode_path,
